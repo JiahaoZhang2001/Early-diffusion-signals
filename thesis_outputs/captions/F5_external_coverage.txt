@@ -1,0 +1,1 @@
+Figure F5 compares k-window feasibility between Twitter15/16 and RumourEval2019. Coverage is the fraction of cascades reaching at least k nodes (k=10,20,50). This robustness check evaluates whether early-window constraints are dataset-specific. Lower coverage at larger k indicates practical limits for early detection and informs fair cross-dataset interpretation.

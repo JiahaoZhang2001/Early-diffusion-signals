@@ -1,0 +1,49 @@
+Run start: 2026-02-10T13:51:12
+xgboost disabled for this run (OpenMP SHM limitation); using GradientBoosting fallback
+Parsed cascades: 2281
+Excluded cascades: 27
+Time-window coverage (>=1 observed node):
+- T=30: coverage=1.0000, N_used=2281
+- T=60: coverage=1.0000, N_used=2281
+- T=180: coverage=1.0000, N_used=2281
+K-window exclusions/checks:
+- K=10: no cascades excluded for modeling (all parsed cascades included; <K handled with partial BFS window)
+- K=20: no cascades excluded for modeling (all parsed cascades included; <K handled with partial BFS window)
+- K=50: no cascades excluded for modeling (all parsed cascades included; <K handled with partial BFS window)
+- R^2 sanity check passed for K-window models (no absurd values).
+Created files:
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/captions/A1K.txt
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/captions/A2K.txt
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/captions/F1T.txt
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/captions/F2T.txt
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/captions/F3.txt
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/captions/F4.txt
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/captions/F5.txt
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/captions/F6.txt
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/A1K_k_veracity_baseline_full.pdf
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/A1K_k_veracity_baseline_full.png
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/A2K_k_reach_baseline_full.pdf
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/A2K_k_reach_baseline_full.png
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/F1T_time_veracity_baseline_full.pdf
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/F1T_time_veracity_baseline_full.png
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/F2T_time_reach_baseline_full.pdf
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/F2T_time_reach_baseline_full.png
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/F3_model_family_full_only.pdf
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/F3_model_family_full_only.png
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/F4_delta_gain_by_model.pdf
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/F4_delta_gain_by_model.png
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/F5_permutation_test_signal.pdf
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/F5_permutation_test_signal.png
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/F6_learning_curve_time.pdf
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/figures/F6_learning_curve_time.png
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/logs/data_audit.txt
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/logs/run_config.json
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/coverage_k.csv
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/dataset_audit.csv
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/delta_gain_by_model_time.csv
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/learning_curve_time.csv
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/model_family_comparison_time_full.csv
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/permutation_null_scores_60min.csv
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/permutation_test_60min.csv
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/results_k_main.csv
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/results_time_main.csv

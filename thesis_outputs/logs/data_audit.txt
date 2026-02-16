@@ -1,0 +1,39 @@
+Data audit summary
+Total labeled: 2308
+Parsed OK: 2281
+Exclusions: 27
+
+Counts by label:
+- false: 575
+- non-rumor: 579
+- true: 579
+- unverified: 575
+
+Exclusions:
+- twitter15:689719109785907200 excluded: parse_error_line_1: negative delay
+- twitter15:519929168864497664 excluded: parse_error_line_1: negative delay
+- twitter15:550175324634619904 excluded: parse_error_line_1: negative delay
+- twitter15:528822281972498432 excluded: parse_error_line_1: negative delay
+- twitter15:766808183696351233 excluded: parse_error_line_1: negative delay
+- twitter15:523123779124600833 excluded: parse_error_line_1: negative delay
+- twitter15:516371936604352513 excluded: parse_error_line_1: negative delay
+- twitter15:752965545528528898 excluded: parse_error_line_1: negative delay
+- twitter15:693729678306189313 excluded: parse_error_line_1: negative delay
+- twitter15:693631772639145984 excluded: parse_error_line_1: negative delay
+- twitter15:715255507506892800 excluded: parse_error_line_1: negative delay
+- twitter15:689722724470620161 excluded: parse_error_line_1: negative delay
+- twitter15:745365403237376000 excluded: parse_error_line_1: negative delay
+- twitter15:514517213022543872 excluded: parse_error_line_1: negative delay
+- twitter15:538975342011363328 excluded: parse_error_line_1: negative delay
+- twitter15:531607884220485632 excluded: parse_error_line_1: negative delay
+- twitter15:519868410599993344 excluded: parse_error_line_1: negative delay
+- twitter16:692748411481780224 excluded: parse_error_line_1: negative delay
+- twitter16:766808183696351233 excluded: parse_error_line_1: negative delay
+- twitter16:693087220459270144 excluded: parse_error_line_1: negative delay
+- twitter16:692702295281262593 excluded: parse_error_line_1: negative delay
+- twitter16:752965545528528898 excluded: parse_error_line_1: negative delay
+- twitter16:690680149164085248 excluded: parse_error_line_1: negative delay
+- twitter16:715255507506892800 excluded: parse_error_line_1: negative delay
+- twitter16:745365403237376000 excluded: parse_error_line_1: negative delay
+- twitter16:692665281362202624 excluded: parse_error_line_1: negative delay
+- twitter16:692753210692476928 excluded: parse_error_line_1: negative delay

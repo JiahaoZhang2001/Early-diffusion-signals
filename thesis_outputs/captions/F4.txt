@@ -1,0 +1,1 @@
+Performance gain from adding structure features (Bundle C): delta = metric(full) - metric(baseline) by model and time window. Panel A reports ΔAUC for veracity; Panel B reports ΔR^2 for reach. Horizontal line marks zero improvement.

@@ -1,0 +1,1 @@
+K-window veracity results (AUC) for baseline, structure-only (Bundle C), and full features using logistic regression with 5-fold stratified CV. Observed nodes are first K in BFS order from the full cascade tree.

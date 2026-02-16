@@ -1,0 +1,1 @@
+Signal accumulation over time windows (full features). Veracity uses logistic regression (AUC), reach uses OLS (R^2), each with fixed 5-fold CV per window. Shaded regions denote ±1 SD and N is shown below ticks.

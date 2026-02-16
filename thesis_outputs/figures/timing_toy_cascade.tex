@@ -1,0 +1,108 @@
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,fit,positioning,backgrounds}
+
+\begin{document}
+\begin{tikzpicture}[
+  >=Latex,
+  line width=0.45pt,
+  every node/.style={font=\small},
+  post/.style={
+    draw=black,
+    rounded corners=2.2pt,
+    minimum width=12mm,
+    minimum height=6.8mm,
+    inner sep=0pt,
+    fill=white
+  },
+  edgeobs/.style={->,solid,black},
+  edgefuture/.style={->,dashed,black!70},
+  box30/.style={draw=black,dashed,rounded corners=2pt,inner sep=4pt},
+  box60/.style={draw=black,dashed,rounded corners=2pt,inner sep=4pt},
+  box180/.style={draw=black,dashed,rounded corners=2pt,inner sep=7pt},
+  timelabel/.style={font=\footnotesize}
+]
+
+% Future/unobserved background region
+\fill[black!8] (8.6,-4.4) rectangle (12.2,1.95);
+\draw[dashed,black!70] (8.6,-4.4) -- (8.6,1.95);
+\node[anchor=south west,align=left,font=\footnotesize] at (8.72,1.45)
+{Future / unobserved\\$T>180$ min};
+
+% Root and observed nodes
+\node[post,path picture={
+  \fill (path picture bounding box.center)+(-2.1pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(0.0pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(2.1pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(-1.0pt,-1.6pt) circle (1.1pt);
+}] (r) at (0.0,1.1) {};
+\node[align=center,anchor=south] at (r.north) {Source post (root), $t=0$};
+
+\node[post,path picture={
+  \fill (path picture bounding box.center)+(-1.7pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(1.7pt,0.9pt) circle (1.1pt);
+}] (n8) at (-3.5,-0.6) {};
+\node[timelabel,anchor=north] at (n8.south) {$t=8$ min};
+
+\node[post,path picture={
+  \fill (path picture bounding box.center)+(-2.1pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(0.0pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(2.1pt,0.9pt) circle (1.1pt);
+}] (n12) at (-1.2,-0.75) {};
+\node[timelabel,anchor=north] at (n12.south) {$t=12$ min};
+
+\node[post,path picture={
+  \fill (path picture bounding box.center)+(-2.1pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(0.0pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(2.1pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(0.0pt,-1.6pt) circle (1.1pt);
+}] (n20) at (1.3,-0.7) {};
+\node[timelabel,anchor=north] at (n20.south) {$t=20$ min};
+
+\node[post,path picture={
+  \fill (path picture bounding box.center)+(-1.8pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(1.8pt,0.9pt) circle (1.1pt);
+}] (n25) at (0.1,-2.2) {};
+\node[timelabel,anchor=north] at (n25.south) {$t=25$ min};
+
+\node[post,path picture={
+  \fill (path picture bounding box.center)+(-2.1pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(0.0pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(2.1pt,0.9pt) circle (1.1pt);
+}] (n32) at (2.9,-2.0) {};
+\node[timelabel,anchor=north] at (n32.south) {$t=32$ min};
+
+\node[post,path picture={
+  \fill (path picture bounding box.center)+(-2.1pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(0.0pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(2.1pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(-1.0pt,-1.6pt) circle (1.1pt);
+}] (n45) at (4.9,-3.0) {};
+\node[timelabel,anchor=north] at (n45.south) {$t=45$ min};
+
+% Future node
+\node[post,path picture={
+  \fill (path picture bounding box.center)+(-1.8pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(1.8pt,0.9pt) circle (1.1pt);
+  \fill (path picture bounding box.center)+(0.0pt,-1.6pt) circle (1.1pt);
+}] (n35h) at (10.2,-2.3) {};
+\node[timelabel,anchor=north] at (n35h.south) {$t=3.5$ h};
+
+% Observed edges
+\draw[edgeobs] (r.south west) to[out=-120,in=80] (n8.north);
+\draw[edgeobs] (r.south) to[out=-95,in=85] (n12.north);
+\draw[edgeobs] (r.south east) to[out=-70,in=100] (n20.north);
+\draw[edgeobs] (n12.south) to[out=-85,in=110] (n25.north);
+\draw[edgeobs] (n20.south) to[out=-85,in=95] (n32.north);
+\draw[edgeobs] (n25.east) to[out=-10,in=170] (n45.west);
+
+% Future/unobserved edge
+\draw[edgefuture] (n45.east) to[out=5,in=185] (n35h.west);
+
+% Time-window boxes
+\node[box30,fit=(r)(n8)(n12)(n20)(n25),label={[timelabel,anchor=south west]north west:$T\leq 30$ min}] {};
+\node[box60,fit=(r)(n8)(n12)(n20)(n25)(n32)(n45),label={[timelabel,anchor=south west]north west:$T\leq 60$ min}] {};
+\node[box180,fit=(r)(n8)(n12)(n20)(n25)(n32)(n45),label={[timelabel,anchor=south west]north west:Observed within $T=180$ min}] {};
+
+\end{tikzpicture}
+\end{document}

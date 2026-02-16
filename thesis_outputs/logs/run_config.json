@@ -1,0 +1,56 @@
+{
+  "seed": 42,
+  "time_windows": [
+    30,
+    60,
+    180
+  ],
+  "k_windows": [
+    10,
+    20,
+    50
+  ],
+  "learning_curve_windows": [
+    10,
+    20,
+    30,
+    45,
+    60,
+    90,
+    120,
+    180
+  ],
+  "baseline_time": [
+    "early_n_nodes",
+    "early_growth_rate",
+    "time_to_10",
+    "time_to_20"
+  ],
+  "baseline_k": [
+    "early_n_nodes",
+    "early_growth_rate_k"
+  ],
+  "structure_bundle": "Bundle C",
+  "structure_features": [
+    "leaf_fraction",
+    "avg_root_distance",
+    "structural_virality_proxy"
+  ],
+  "cv_veracity": {
+    "type": "StratifiedKFold",
+    "n_splits": 5,
+    "shuffle": true,
+    "random_state": 42
+  },
+  "cv_reach": {
+    "type": "KFold",
+    "n_splits": 5,
+    "shuffle": true,
+    "random_state": 42
+  },
+  "xgboost": false,
+  "xgb_note": "xgboost disabled for this run (OpenMP SHM limitation); using GradientBoosting fallback",
+  "python": "3.12.2 | packaged by conda-forge | (main, Feb 16 2024, 21:00:12) [Clang 16.0.6 ]",
+  "platform": "macOS-15.6.1-x86_64-i386-64bit",
+  "cwd": "/Users/jiahaozhang/Desktop/thesis/thesis data"
+}

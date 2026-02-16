@@ -1,0 +1,1 @@
+K-window reach results (R^2) for baseline, structure-only (Bundle C), and full features using OLS with 5-fold CV. Target is computed from full final size as log(1 + final_size).

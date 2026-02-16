@@ -1,0 +1,1 @@
+Full-feature model-family comparison over time windows. Panel A shows veracity ROC-AUC for logistic regression, random forest, and XGB (or fallback HistGradientBoosting); Panel B shows reach R^2 for OLS, random forest regressor, and XGB regressor (or fallback). Shaded regions are ±1 SD across fixed 5-fold splits.

@@ -1,0 +1,17 @@
+Structure bundle search for veracity AUC (binary y_false)
+Input table: thesis_outputs/data/twitter1516_features_time.csv
+Windows: [30, 60, 180]
+Baseline features (unchanged): early_n_nodes, early_growth_rate, time_to_10, time_to_20
+Current structure features (from prior run): early_depth, avg_root_distance, early_width, branching_factor, internal_node_share, leaf_fraction, outdegree_entropy, structural_virality_proxy
+Bundle A: norm_depth, norm_width, leaf_fraction, avg_root_distance
+Bundle B: depth_to_width, internal_node_share, outdegree_entropy, leaf_fraction
+Bundle C: structural_virality_proxy, avg_root_distance, leaf_fraction
+Bundle D: norm_depth, norm_width, leaf_fraction, avg_root_distance, interaction_n_norm_depth, interaction_growth_branch
+Any improvement over baseline: True
+Bundle A logistic deltas by window: [-0.0022, -0.0075, -0.0062]; consistent_sign=True
+Bundle B logistic deltas by window: [-0.0024, -0.0022, -0.0007]; consistent_sign=True
+Bundle C logistic deltas by window: [0.0014, -0.0025, 0.0005]; consistent_sign=False
+Bundle D logistic deltas by window: [-0.0003, -0.0051, -0.0015]; consistent_sign=True
+Rationale: normalization can reduce scale collinearity with early_n_nodes; ratio features encode shape independent of size;
+virality-focused bundle targets global structure signal; interaction terms add controlled nonlinearity for volume-geometry coupling.
+Best bundle selected (logistic): B

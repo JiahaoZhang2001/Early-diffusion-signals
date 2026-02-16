@@ -1,0 +1,1 @@
+Permutation test at T=60 with full features. Histograms show null score distributions from 200 target shuffles (same CV splits). Vertical red lines mark observed scores; p-values are one-sided fractions of null >= observed.

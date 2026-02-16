@@ -1,0 +1,1 @@
+Figure F4 decomposes performance by feature family for each time window. Panel A reports veracity AUC; Panel B reports reach R². Baseline captures early volume/timing, Structure-only uses geometry only, and Full combines both. If Full consistently exceeds Baseline, geometry adds incremental predictive signal under early-warning constraints.

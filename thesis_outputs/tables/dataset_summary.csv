@@ -1,0 +1,3 @@
+dataset,total_labeled,parsed_ok,excluded,label_true,label_false,label_unverified,label_non_rumor
+twitter15,1490,1473,17,372,370,374,374
+twitter16,818,808,10,207,205,201,205

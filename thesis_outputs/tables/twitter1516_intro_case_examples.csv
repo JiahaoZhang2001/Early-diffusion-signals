@@ -1,0 +1,3 @@
+case,dataset,cascade_id,tree_file,early_window_type,early_window_value,early_window_message_count,early_window_depth,final_size
+A,twitter15,499679379820412928,rumor_detection_acl2017/twitter15/tree/499679379820412928.txt,time_minutes,60,173,4,2281
+B,twitter16,524962142563610625,rumor_detection_acl2017/twitter16/tree/524962142563610625.txt,time_minutes,60,173,4,178

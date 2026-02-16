@@ -1,0 +1,1 @@
+Time-window reach results (Twitter15/16). R^2 from 5-fold CV using OLS for baseline, structure-only (Bundle C), and full features; shaded regions are ±1 SD. Target is log(1 + final_size), and N per window is shown below ticks.
