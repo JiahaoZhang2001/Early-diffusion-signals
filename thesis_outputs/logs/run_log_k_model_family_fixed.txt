@@ -1,0 +1,18 @@
+Model family run summary
+xgboost_available=False
+model_note=ENABLE_XGBOOST!=1 in this run; using GradientBoosting fallback (HGB unavailable in current runtime).
+
+Per-K valid-set coverage and N_used (final_size > K)
+K=10	N_total=2308	N_geK=1812	N_gtK=1752	coverage_geK=0.785095	coverage_gtK=0.759099
+K=20	N_total=2308	N_geK=1189	N_gtK=1138	coverage_geK=0.515165	coverage_gtK=0.493068
+K=50	N_total=2308	N_geK=505	N_gtK=492	coverage_geK=0.218804	coverage_gtK=0.213172
+
+Created files
+thesis_outputs/tables/model_family_comparison_k_full_fixed.csv
+thesis_outputs/tables/model_family_comparison_k_full_fixed_with_mae.csv
+thesis_outputs/tables/delta_gain_by_model_k_fixed.csv
+thesis_outputs/figures/A3K_fixed_model_family_full_only.png
+thesis_outputs/figures/A3K_fixed_model_family_full_only.pdf
+thesis_outputs/figures/A4K_fixed_delta_gain_by_model.png
+thesis_outputs/figures/A4K_fixed_delta_gain_by_model.pdf
+thesis_outputs/logs/run_log_k_model_family_fixed.txt

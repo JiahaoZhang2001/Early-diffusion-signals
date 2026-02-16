@@ -1,1 +1,1 @@
-K-window veracity results (AUC) for baseline, structure-only (Bundle C), and full features using logistic regression with 5-fold stratified CV. Observed nodes are first K in BFS order from the full cascade tree.
+Veracity prediction (k-window). ROC-AUC (mean±SD) from 5-fold Stratified CV. Baseline uses early_n_nodes and early_growth_rate_k; structure-only uses Bundle C; full combines both. Coverage reports fraction of cascades with final_size ≥ K.

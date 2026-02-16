@@ -1,0 +1,1 @@
+Repeated 5x10 cross-validation at K=50 (full features, valid set final_size > 50) is used because N_used is smaller at large K, so single 5-fold estimates can have higher variance; distributions summarize ROC-AUC, R^2, and MAE (on y_reach=log(1+final_size)).

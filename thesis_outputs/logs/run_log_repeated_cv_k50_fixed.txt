@@ -1,0 +1,12 @@
+Repeated CV K=50 full-feature stability check
+xgboost_available=False
+model_note=ENABLE_XGBOOST!=1 in this run; using GradientBoosting fallback (HGB unavailable in current runtime).
+N_used=492
+coverage_gtK=0.213172
+
+Created files
+thesis_outputs/tables/repeated_cv_k50_full_fixed.csv
+thesis_outputs/figures/A6K_repeated_cv_k50_distributions.png
+thesis_outputs/figures/A6K_repeated_cv_k50_distributions.pdf
+thesis_outputs/captions/A6K_fixed.txt
+thesis_outputs/logs/run_log_repeated_cv_k50_fixed.txt

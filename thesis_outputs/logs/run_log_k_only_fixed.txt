@@ -1,0 +1,25 @@
+Created outputs:
+thesis_outputs/tables/dataset_audit.csv
+thesis_outputs/logs/data_audit.txt
+thesis_outputs/tables/results_k_only_fixed.csv
+thesis_outputs/tables/coverage_k_only_fixed.csv
+thesis_outputs/tables/model_family_comparison_k_full_fixed.csv
+thesis_outputs/tables/model_family_comparison_k_full_fixed_with_mae.csv
+thesis_outputs/tables/delta_gain_by_model_k_fixed.csv
+thesis_outputs/figures/A1K_fixed_k_veracity_baseline_structure_full.png
+thesis_outputs/figures/A1K_fixed_k_veracity_baseline_structure_full.pdf
+thesis_outputs/figures/A2K_fixed_k_reach_baseline_structure_full.png
+thesis_outputs/figures/A2K_fixed_k_reach_baseline_structure_full.pdf
+thesis_outputs/figures/A3K_fixed_model_family_full_only.png
+thesis_outputs/figures/A3K_fixed_model_family_full_only.pdf
+thesis_outputs/figures/A4K_fixed_delta_gain_by_model.png
+thesis_outputs/figures/A4K_fixed_delta_gain_by_model.pdf
+thesis_outputs/figures/A5K_fixed_reach_mae_full_only.png
+thesis_outputs/figures/A5K_fixed_reach_mae_full_only.pdf
+thesis_outputs/captions/A1K_fixed.txt
+thesis_outputs/captions/A2K_fixed.txt
+thesis_outputs/captions/A5K_fixed.txt
+thesis_outputs/logs/run_config_k_only_fixed.json
+thesis_outputs/logs/run_log_k_only_fixed.txt
+thesis_outputs/logs/run_log_k_model_family_fixed.txt
+thesis_outputs/logs/run_log_k_mae_fixed.txt

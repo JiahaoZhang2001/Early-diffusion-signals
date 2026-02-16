@@ -1,5 +1,7 @@
-Run start: 2026-02-10T13:51:12
+Run start: 2026-02-15T20:00:30
 xgboost disabled for this run (OpenMP SHM limitation); using GradientBoosting fallback
+tuned_tree_cls_params={'criterion': 'entropy', 'max_depth': 10, 'min_samples_leaf': 35, 'min_samples_split': 75, 'ccp_alpha': 7.787658410143284e-06, 'random_state': 42, 'class_weight': 'balanced'}
+tuned_tree_reg_params={'criterion': 'friedman_mse', 'max_depth': 10, 'min_samples_leaf': 35, 'min_samples_split': 10, 'ccp_alpha': 0.00037348188749214417, 'random_state': 42}
 Parsed cascades: 2281
 Excluded cascades: 27
 Time-window coverage (>=1 observed node):
@@ -47,3 +49,4 @@ Created files:
 - /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/permutation_test_60min.csv
 - /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/results_k_main.csv
 - /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/results_time_main.csv
+- /Users/jiahaozhang/Desktop/thesis/thesis data/thesis_outputs/tables/tree_tuned_60min.csv

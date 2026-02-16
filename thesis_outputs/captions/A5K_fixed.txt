@@ -1,0 +1,1 @@
+Reach MAE (k-window, full features) across model families on the valid set (final_size > K). MAE is computed on y_reach = log(1+final_size), so lower values indicate better predictive accuracy.

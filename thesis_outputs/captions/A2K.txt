@@ -1,1 +1,1 @@
-K-window reach results (R^2) for baseline, structure-only (Bundle C), and full features using OLS with 5-fold CV. Target is computed from full final size as log(1 + final_size).
+Reach prediction (k-window). Out-of-sample R^2 (mean±SD) from 5-fold CV, target log(1+final_size). Baseline/structure-only/full as in A1K. Coverage reports fraction of cascades with final_size ≥ K.

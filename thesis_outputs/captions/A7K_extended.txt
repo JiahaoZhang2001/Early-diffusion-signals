@@ -1,0 +1,1 @@
+Adding time_to_K restores timing heterogeneity that the pure k-window node set suppresses: two cascades can share the first K nodes but reach them at different rates. Extended baseline/full feature sets therefore test whether this recovered timing signal improves veracity and reach prediction under the valid set final_size > K.

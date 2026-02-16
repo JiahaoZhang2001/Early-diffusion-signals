@@ -1,0 +1,12 @@
+Created outputs:
+thesis_outputs/tables/dataset_audit.csv
+thesis_outputs/logs/data_audit.txt
+thesis_outputs/tables/results_k_only.csv
+thesis_outputs/tables/coverage_k_only.csv
+thesis_outputs/figures/A1K_k_veracity_baseline_structure_full.png
+thesis_outputs/figures/A1K_k_veracity_baseline_structure_full.pdf
+thesis_outputs/figures/A2K_k_reach_baseline_structure_full.png
+thesis_outputs/figures/A2K_k_reach_baseline_structure_full.pdf
+thesis_outputs/captions/A1K.txt
+thesis_outputs/captions/A2K.txt
+thesis_outputs/logs/run_config_k_only.json

@@ -1,0 +1,26 @@
+{
+  "random_state": 42,
+  "K_LIST": [
+    10,
+    20,
+    50
+  ],
+  "root_dir": "rumor_detection_acl2017",
+  "datasets": {
+    "twitter15": {
+      "label_path": "rumor_detection_acl2017/twitter15/label.txt",
+      "tree_dir": "rumor_detection_acl2017/twitter15/tree"
+    },
+    "twitter16": {
+      "label_path": "rumor_detection_acl2017/twitter16/label.txt",
+      "tree_dir": "rumor_detection_acl2017/twitter16/tree"
+    }
+  },
+  "outputs": {
+    "tables": "thesis_outputs/tables",
+    "figures": "thesis_outputs/figures",
+    "captions": "thesis_outputs/captions",
+    "logs": "thesis_outputs/logs"
+  },
+  "notes": "K-window only; BFS-first-K nodes; baseline models only; Pipeline prevents leakage."
+}

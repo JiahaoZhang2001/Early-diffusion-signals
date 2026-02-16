@@ -1,0 +1,4 @@
+task,window_minutes,model,metric,mean,std,N_used
+veracity,60,decision_tree_tuned,auc,0.6512317685059658,0.015661204241247537,2281
+reach,60,decision_tree_tuned,r2,0.6141303364877357,0.03159079496017264,2281
+reach,60,decision_tree_tuned,mae,0.3447085960533759,0.010773224578061565,2281

@@ -1,0 +1,15 @@
+K-window MAE full-model-family summary
+xgboost_available=False
+model_note=ENABLE_XGBOOST!=1 in this run; using GradientBoosting fallback (HGB unavailable in current runtime).
+
+Per-K valid-set coverage and N_used (final_size > K)
+K=10	N_gtK=1752	coverage_gtK=0.759099
+K=20	N_gtK=1138	coverage_gtK=0.493068
+K=50	N_gtK=492	coverage_gtK=0.213172
+
+Created files
+thesis_outputs/tables/model_family_comparison_k_full_fixed_with_mae.csv
+thesis_outputs/figures/A5K_fixed_reach_mae_full_only.png
+thesis_outputs/figures/A5K_fixed_reach_mae_full_only.pdf
+thesis_outputs/captions/A5K_fixed.txt
+thesis_outputs/logs/run_log_k_mae_fixed.txt

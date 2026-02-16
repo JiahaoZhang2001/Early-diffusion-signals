@@ -29,6 +29,7 @@ from sklearn.metrics import mean_absolute_error, r2_score, roc_auc_score
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 SEED = 42
 RNG = np.random.default_rng(SEED)
@@ -51,6 +52,26 @@ BASELINE_K = ["early_n_nodes", "early_growth_rate_k"]
 STRUCTURE_BUNDLE_C = ["leaf_fraction", "avg_root_distance", "structural_virality_proxy"]
 
 SAMPLE_VIRALITY_N = 150
+
+# Rounded tuned tree params (nearest 5/10), with ccp_alpha kept unchanged.
+TUNED_TREE_CLS_PARAMS = {
+    "criterion": "entropy",
+    "max_depth": 10,
+    "min_samples_leaf": 35,
+    "min_samples_split": 75,
+    "ccp_alpha": 7.787658410143284e-06,
+    "random_state": SEED,
+    "class_weight": "balanced",
+}
+
+TUNED_TREE_REG_PARAMS = {
+    "criterion": "friedman_mse",
+    "max_depth": 10,
+    "min_samples_leaf": 35,
+    "min_samples_split": 10,
+    "ccp_alpha": 0.00037348188749214417,
+    "random_state": SEED,
+}
 
 
 def ensure_dirs() -> None:
@@ -1254,6 +1275,74 @@ def main() -> None:
         )
     )
 
+    # Tuned decision-tree check at T=60 using full features.
+    df60_tree = time_df[time_df["window_value"] == 60].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
+    tree_features = BASELINE_TIME + STRUCTURE_BUNDLE_C
+    x_tree = df60_tree[tree_features]
+    y_tree_cls = df60_tree["y_false"].to_numpy().astype(int)
+    y_tree_reg = df60_tree["y_reach"].to_numpy().astype(float)
+
+    cls_splits = get_cv_splits(df60_tree, "veracity")
+    reg_splits = get_cv_splits(df60_tree, "reach")
+
+    tree_auc_scores: List[float] = []
+    for tr, te in cls_splits:
+        pre = make_preprocessor(tree_features, use_missing_ind_for_time_to=True)
+        pipe = Pipeline([("pre", pre), ("tree", DecisionTreeClassifier(**TUNED_TREE_CLS_PARAMS))])
+        pipe.fit(x_tree.iloc[tr], y_tree_cls[tr])
+        prob = pipe.predict_proba(x_tree.iloc[te])[:, 1]
+        if len(np.unique(y_tree_cls[te])) >= 2:
+            tree_auc_scores.append(float(roc_auc_score(y_tree_cls[te], prob)))
+
+    tree_r2_scores: List[float] = []
+    tree_mae_scores: List[float] = []
+    for tr, te in reg_splits:
+        pre = make_preprocessor(tree_features, use_missing_ind_for_time_to=True)
+        pipe = Pipeline([("pre", pre), ("tree", DecisionTreeRegressor(**TUNED_TREE_REG_PARAMS))])
+        pipe.fit(x_tree.iloc[tr], y_tree_reg[tr])
+        pred = pipe.predict(x_tree.iloc[te])
+        fold_r2 = float(r2_score(y_tree_reg[te], pred))
+        if not np.isfinite(fold_r2):
+            fold_r2 = -1.0
+        fold_r2 = float(np.clip(fold_r2, -1.0, 1.0))
+        tree_r2_scores.append(fold_r2)
+        tree_mae_scores.append(float(mean_absolute_error(y_tree_reg[te], pred)))
+
+    tree_eval_df = pd.DataFrame(
+        [
+            {
+                "task": "veracity",
+                "window_minutes": 60,
+                "model": "decision_tree_tuned",
+                "metric": "auc",
+                "mean": float(np.mean(tree_auc_scores)),
+                "std": float(np.std(tree_auc_scores)),
+                "N_used": len(df60_tree),
+            },
+            {
+                "task": "reach",
+                "window_minutes": 60,
+                "model": "decision_tree_tuned",
+                "metric": "r2",
+                "mean": float(np.mean(tree_r2_scores)),
+                "std": float(np.std(tree_r2_scores)),
+                "N_used": len(df60_tree),
+            },
+            {
+                "task": "reach",
+                "window_minutes": 60,
+                "model": "decision_tree_tuned",
+                "metric": "mae",
+                "mean": float(np.mean(tree_mae_scores)),
+                "std": float(np.std(tree_mae_scores)),
+                "N_used": len(df60_tree),
+            },
+        ]
+    )
+    p_tree_eval = OUT_TABLES / "tree_tuned_60min.csv"
+    tree_eval_df.to_csv(p_tree_eval, index=False)
+    created_files.append(str(p_tree_eval))
+
     # Final logs/config
     run_config = {
         "seed": SEED,
@@ -1284,6 +1373,8 @@ def main() -> None:
         k_exclusion_log.append("R^2 sanity check passed for K-window models (no absurd values).")
 
     run_log_lines.append(xgb_note)
+    run_log_lines.append(f"tuned_tree_cls_params={TUNED_TREE_CLS_PARAMS}")
+    run_log_lines.append(f"tuned_tree_reg_params={TUNED_TREE_REG_PARAMS}")
     run_log_lines.append(f"Parsed cascades: {len(cascades)}")
     run_log_lines.append(f"Excluded cascades: {len(exclusions)}")
     run_log_lines.append("Time-window coverage (>=1 observed node):")

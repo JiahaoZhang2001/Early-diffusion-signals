@@ -1,0 +1,16 @@
+K-window extended run with time_to_K
+xgboost_available=False
+model_note=ENABLE_XGBOOST!=1 in this run; using GradientBoosting fallback (HGB unavailable in current runtime).
+
+Delta summary full_ext - full_original
+roc_auc: mean_delta=0.004701, improved_cells=4/6
+r2: mean_delta=-0.018557, improved_cells=4/6
+mae: mean_delta=-0.063587, improved_cells=4/6
+
+Created files
+thesis_outputs/tables/results_k_only_fixed_extended_time_to_K.csv
+thesis_outputs/tables/delta_gain_time_to_K_k.csv
+thesis_outputs/figures/A7K_extended_time_to_K_effect.png
+thesis_outputs/figures/A7K_extended_time_to_K_effect.pdf
+thesis_outputs/captions/A7K_extended.txt
+thesis_outputs/logs/run_log_k_extended_time_to_K.txt
