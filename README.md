@@ -69,8 +69,8 @@ bash reproduce.sh
 
 Full environment setup:
 ```bash
-git clone https://github.com/JiahaoZhang2001/thesis-data.git
-cd thesis-data
+git clone https://github.com/JiahaoZhang2001/Early-diffusion-signals.git
+cd Early-diffusion-signals
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt

@@ -5,7 +5,7 @@ type: software
 authors:
   - family-names: "Zhang"
     given-names: "Jiahao"
-repository-code: "https://github.com/JiahaoZhang2001/thesis-data.git"
+repository-code: "https://github.com/JiahaoZhang2001/Early-diffusion-signals.git"
 abstract: "Code and outputs for early-window diffusion feature modeling of rumor veracity and reach prediction."
 keywords:
   - misinformation
