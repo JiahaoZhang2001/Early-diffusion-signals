@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+title: "Early Diffusion Signals for Predicting Reach and Veracity in Social Media Rumor Cascades"
+message: "If you use this repository, please cite it as below."
+type: software
+authors:
+  - family-names: "Zhang"
+    given-names: "Jiahao"
+repository-code: "https://github.com/JiahaoZhang2001/thesis-data.git"
+abstract: "Code and outputs for early-window diffusion feature modeling of rumor veracity and reach prediction."
+keywords:
+  - misinformation
+  - rumor detection
+  - diffusion modeling
+  - reproducible research
+license: "Proprietary"
+version: "course-final"
+date-released: "2026-02-22"

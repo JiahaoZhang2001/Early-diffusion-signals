@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import ast
+import argparse
 import json
 import math
 import os
@@ -35,21 +36,39 @@ SEED = 42
 RNG = np.random.default_rng(SEED)
 
 ROOT = Path(".").resolve()
-DATA_ROOT = ROOT / "rumor_detection_acl2017"
+DATA_ROOT = ROOT / "Data" / "rumor_detection_acl2017"
 OUT_ROOT = ROOT / "thesis_outputs"
 OUT_TABLES = OUT_ROOT / "tables"
 OUT_FIGURES = OUT_ROOT / "figures"
 OUT_CAPTIONS = OUT_ROOT / "captions"
 OUT_LOGS = OUT_ROOT / "logs"
 
-TIME_WINDOWS = [30, 60, 180]
-K_WINDOWS = [10, 20, 50]
+TIME_WINDOWS = [10, 20, 30, 45, 60, 90, 120, 180]
+K_WINDOWS = [10, 20, 30, 45, 60, 90, 120, 180]
 T_CURVE = [10, 20, 30, 45, 60, 90, 120, 180]
 LABELS = {"true", "false", "unverified", "non-rumor"}
 
-BASELINE_TIME = ["early_n_nodes", "early_growth_rate", "time_to_10", "time_to_20"]
-BASELINE_K = ["early_n_nodes", "early_growth_rate_k"]
-STRUCTURE_BUNDLE_C = ["leaf_fraction", "avg_root_distance", "structural_virality_proxy"]
+BASELINE_TIME = ["early_n_nodes", "early_growth_rate", "time_to_10", "time_to_20", "obs_horizon"]
+BASELINE_K = ["early_n_nodes", "early_growth_rate_k", "obs_horizon"]
+RAW_STRUCTURE_SHAPE = [
+    "leaf_fraction",
+    "internal_fraction",
+    "depth_mean_norm",
+    "depth_std_norm",
+    "depth_entropy_norm",
+    "depth_p90_norm",
+    "degree_gini",
+    "branching_entropy_norm",
+    "subtree_imbalance",
+    "virality_norm",
+]
+STRUCTURE_BUNDLE_C = [f"{c}_resid" for c in RAW_STRUCTURE_SHAPE]
+DYNAMIC_BUNDLE_H = [
+    "hawkes_mu_hat",
+    "hawkes_alpha_hat",
+    "hawkes_branching_ratio",
+    "tempo_cv_interarrival",
+]
 
 SAMPLE_VIRALITY_N = 150
 
@@ -72,6 +91,25 @@ TUNED_TREE_REG_PARAMS = {
     "ccp_alpha": 0.00037348188749214417,
     "random_state": SEED,
 }
+
+
+def resolve_dataset_root(data_dir: Path) -> Path:
+    data_dir = data_dir.resolve()
+    nested = data_dir / "rumor_detection_acl2017"
+    if nested.exists():
+        return nested
+    return data_dir
+
+
+def configure_paths(data_dir: Path, out_dir: Path) -> None:
+    global ROOT, DATA_ROOT, OUT_ROOT, OUT_TABLES, OUT_FIGURES, OUT_CAPTIONS, OUT_LOGS
+    ROOT = Path(".").resolve()
+    DATA_ROOT = resolve_dataset_root(data_dir)
+    OUT_ROOT = out_dir.resolve()
+    OUT_TABLES = OUT_ROOT / "tables"
+    OUT_FIGURES = OUT_ROOT / "figures"
+    OUT_CAPTIONS = OUT_ROOT / "captions"
+    OUT_LOGS = OUT_ROOT / "logs"
 
 
 def ensure_dirs() -> None:
@@ -207,6 +245,78 @@ def finite_or_nan(x: float) -> float:
     return np.nan
 
 
+def normalized_entropy(values: Sequence[float]) -> float:
+    arr = np.asarray(values, dtype=float)
+    total = float(arr.sum())
+    if total <= 0:
+        return 0.0
+    p = arr / total
+    p = p[p > 0]
+    if p.size <= 1:
+        return 0.0
+    h = -float(np.sum(p * np.log(p)))
+    return float(h / np.log(float(p.size)))
+
+
+def gini_coefficient(values: Sequence[float]) -> float:
+    arr = np.sort(np.asarray(values, dtype=float))
+    if arr.size == 0:
+        return 0.0
+    arr = np.maximum(arr, 0.0)
+    s = float(arr.sum())
+    if s <= 0:
+        return 0.0
+    idx = np.arange(1, arr.size + 1, dtype=float)
+    return float(np.clip((2.0 * np.sum(idx * arr) / (arr.size * s)) - ((arr.size + 1.0) / arr.size), 0.0, 1.0))
+
+
+def estimate_hawkes_params(event_times: Sequence[float], horizon: float) -> Dict[str, float]:
+    t = np.sort(np.asarray(event_times, dtype=float))
+    t = t[np.isfinite(t)]
+    horizon = float(max(horizon, 1e-6))
+    if t.size <= 2:
+        return {
+            "hawkes_mu_hat": float(t.size / horizon),
+            "hawkes_alpha_hat": 0.0,
+            "hawkes_branching_ratio": 0.0,
+            "tempo_cv_interarrival": 0.0,
+        }
+
+    inter = np.diff(t)
+    inter = inter[inter > 0]
+    if inter.size == 0:
+        inter = np.array([horizon], dtype=float)
+    mean_inter = float(np.mean(inter))
+    std_inter = float(np.std(inter))
+    cv_inter = float(std_inter / (mean_inter + 1e-9))
+    beta_hat = 1.0 / max(mean_inter, 1e-6)
+
+    n_bins = int(np.clip(np.sqrt(t.size) * 2.0, 8, 32))
+    edges = np.linspace(0.0, horizon, n_bins + 1)
+    dt = float(np.mean(np.diff(edges)))
+    counts, _ = np.histogram(t, bins=edges)
+
+    starts = edges[:-1]
+    excitation = np.zeros(n_bins, dtype=float)
+    for i, s in enumerate(starts):
+        prev = t[t < s]
+        if prev.size:
+            excitation[i] = float(np.sum(np.exp(-beta_hat * (s - prev))))
+
+    y = counts.astype(float) / max(dt, 1e-6)
+    x = np.column_stack([np.ones_like(excitation), excitation])
+    theta, *_ = np.linalg.lstsq(x, y, rcond=None)
+    mu_hat = float(max(theta[0], 0.0))
+    alpha_hat = float(max(theta[1], 0.0))
+    branching_ratio = float(np.clip(alpha_hat / max(beta_hat, 1e-9), 0.0, 2.0))
+    return {
+        "hawkes_mu_hat": finite_or_nan(mu_hat),
+        "hawkes_alpha_hat": finite_or_nan(alpha_hat),
+        "hawkes_branching_ratio": finite_or_nan(branching_ratio),
+        "tempo_cv_interarrival": finite_or_nan(cv_inter),
+    }
+
+
 def build_subgraph_adj(full_adj: Dict[str, List[str]], obs_set: set) -> Dict[str, List[str]]:
     out: Dict[str, List[str]] = defaultdict(list)
     for u in obs_set:
@@ -216,14 +326,32 @@ def build_subgraph_adj(full_adj: Dict[str, List[str]], obs_set: set) -> Dict[str
     return out
 
 
-def compute_structure_features(obs_nodes: List[str], obs_adj: Dict[str, List[str]], root: str, rng: np.random.Generator) -> Dict[str, float]:
+def compute_structure_features(
+    obs_nodes: List[str],
+    obs_adj: Dict[str, List[str]],
+    root: str,
+    delays: Dict[str, float],
+    obs_horizon: float,
+    rng: np.random.Generator,
+) -> Dict[str, float]:
     obs_nodes = list(dict.fromkeys(obs_nodes))
     n = len(obs_nodes)
     if n == 0:
         return {
             "leaf_fraction": 1.0,
-            "avg_root_distance": 0.0,
-            "structural_virality_proxy": 0.0,
+            "internal_fraction": 0.0,
+            "depth_mean_norm": 0.0,
+            "depth_std_norm": 0.0,
+            "depth_entropy_norm": 0.0,
+            "depth_p90_norm": 0.0,
+            "degree_gini": 0.0,
+            "branching_entropy_norm": 0.0,
+            "subtree_imbalance": 0.0,
+            "virality_norm": 0.0,
+            "hawkes_mu_hat": 0.0,
+            "hawkes_alpha_hat": 0.0,
+            "hawkes_branching_ratio": 0.0,
+            "tempo_cv_interarrival": 0.0,
         }
 
     out_deg = {u: 0 for u in obs_nodes}
@@ -231,13 +359,39 @@ def compute_structure_features(obs_nodes: List[str], obs_adj: Dict[str, List[str
     for u in obs_nodes:
         out_deg[u] = sum(1 for v in obs_adj.get(u, []) if v in obs_set)
 
-    _, depths = bfs_depths(obs_adj, root)
-    avg_dist = float(np.mean(list(depths.values()))) if depths else 0.0
-    avg_dist = float(np.clip(avg_dist, 0.0, float(n)))
+    order, depths = bfs_depths(obs_adj, root)
+    depth_vals = np.asarray([depths[u] for u in order if u in depths], dtype=float)
+    depth_scale = max(np.log2(n + 1.0), 1.0)
+    depth_mean_norm = float(np.mean(depth_vals) / depth_scale) if depth_vals.size else 0.0
+    depth_std_norm = float(np.std(depth_vals) / depth_scale) if depth_vals.size else 0.0
+    depth_p90_norm = float(np.percentile(depth_vals, 90) / max(float(depth_vals.max()), 1.0)) if depth_vals.size else 0.0
+    depth_counts = Counter(depth_vals.tolist())
+    depth_entropy_norm = normalized_entropy(list(depth_counts.values()))
 
+    out_deg_vals = np.asarray([out_deg.get(u, 0) for u in obs_nodes], dtype=float)
     leaves = sum(1 for u in obs_nodes if out_deg.get(u, 0) == 0)
+    internal = n - leaves
     leaf_fraction = float(leaves / n)
+    internal_fraction = float(internal / n)
     leaf_fraction = float(np.clip(leaf_fraction, 0.0, 1.0))
+    internal_fraction = float(np.clip(internal_fraction, 0.0, 1.0))
+    degree_gini = gini_coefficient(out_deg_vals)
+    branching_entropy_norm = normalized_entropy([x for x in out_deg_vals if x > 0])
+
+    subtree_size: Dict[str, int] = {u: 1 for u in order}
+    for u in reversed(order):
+        for v in obs_adj.get(u, []):
+            if v in subtree_size:
+                subtree_size[u] += subtree_size[v]
+    node_imbalances: List[float] = []
+    for u in order:
+        children = [v for v in obs_adj.get(u, []) if v in subtree_size]
+        if len(children) < 2:
+            continue
+        child_sizes = np.asarray([subtree_size[v] for v in children], dtype=float)
+        imb = float((child_sizes.max() - child_sizes.min()) / max(child_sizes.sum(), 1e-6))
+        node_imbalances.append(imb)
+    subtree_imbalance = float(np.mean(node_imbalances)) if node_imbalances else 0.0
 
     undirected: Dict[str, List[str]] = defaultdict(list)
     for u in obs_nodes:
@@ -246,13 +400,26 @@ def compute_structure_features(obs_nodes: List[str], obs_adj: Dict[str, List[str
                 undirected[u].append(v)
                 undirected[v].append(u)
     virality = structural_virality_proxy(obs_nodes, undirected, rng)
-    virality = float(np.clip(virality, 0.0, float(n)))
+    virality_norm = float(np.clip(virality / max(n - 1.0, 1.0), 0.0, 2.0))
 
-    return {
+    event_times = np.sort(np.asarray([delays.get(nid, np.nan) for nid in obs_nodes], dtype=float))
+    event_times = event_times[np.isfinite(event_times)]
+    hawkes = estimate_hawkes_params(event_times, obs_horizon)
+
+    feats = {
         "leaf_fraction": finite_or_nan(leaf_fraction),
-        "avg_root_distance": finite_or_nan(avg_dist),
-        "structural_virality_proxy": finite_or_nan(virality),
+        "internal_fraction": finite_or_nan(internal_fraction),
+        "depth_mean_norm": finite_or_nan(depth_mean_norm),
+        "depth_std_norm": finite_or_nan(depth_std_norm),
+        "depth_entropy_norm": finite_or_nan(depth_entropy_norm),
+        "depth_p90_norm": finite_or_nan(depth_p90_norm),
+        "degree_gini": finite_or_nan(degree_gini),
+        "branching_entropy_norm": finite_or_nan(branching_entropy_norm),
+        "subtree_imbalance": finite_or_nan(subtree_imbalance),
+        "virality_norm": finite_or_nan(virality_norm),
+        **hawkes,
     }
+    return {k: float(np.nan_to_num(v, nan=0.0, posinf=0.0, neginf=0.0)) for k, v in feats.items()}
 
 
 def parse_cascade(dataset: str, cascade_id: str, label: str, tree_path: Path) -> Tuple[Optional[Cascade], Optional[str]]:
@@ -353,7 +520,7 @@ def make_time_feature_rows(cascades: List[Cascade], windows: Sequence[int], rng:
             obs_set = set(obs_nodes)
             obs_adj = build_subgraph_adj(c.adj, obs_set)
 
-            s_feats = compute_structure_features(obs_nodes, obs_adj, c.root, rng)
+            s_feats = compute_structure_features(obs_nodes, obs_adj, c.root, c.delays, float(t), rng)
             sorted_delays = sorted(c.delays[n] for n in obs_nodes)
             row = {
                 "dataset": c.dataset,
@@ -366,6 +533,7 @@ def make_time_feature_rows(cascades: List[Cascade], windows: Sequence[int], rng:
                 "window_value": int(t),
                 "early_n_nodes": len(obs_nodes),
                 "early_growth_rate": len(obs_nodes) / float(t),
+                "obs_horizon": float(t),
                 "time_to_10": sorted_delays[9] if len(sorted_delays) >= 10 else np.nan,
                 "time_to_20": sorted_delays[19] if len(sorted_delays) >= 20 else np.nan,
                 **s_feats,
@@ -384,8 +552,9 @@ def make_k_feature_rows(cascades: List[Cascade], windows: Sequence[int], rng: np
                 obs_nodes = [c.root]
             obs_set = set(obs_nodes)
             obs_adj = build_subgraph_adj(c.adj, obs_set)
-            s_feats = compute_structure_features(obs_nodes, obs_adj, c.root, rng)
             max_delay = max(c.delays[n] for n in obs_nodes)
+            obs_horizon = max(float(max_delay), 1.0)
+            s_feats = compute_structure_features(obs_nodes, obs_adj, c.root, c.delays, obs_horizon, rng)
             row = {
                 "dataset": c.dataset,
                 "cascade_id": c.cascade_id,
@@ -396,12 +565,80 @@ def make_k_feature_rows(cascades: List[Cascade], windows: Sequence[int], rng: np
                 "window_type": "k",
                 "window_value": int(k),
                 "early_n_nodes": len(obs_nodes),
-                "early_growth_rate_k": len(obs_nodes) / (max_delay + 1e-6),
+                "early_growth_rate_k": len(obs_nodes) / obs_horizon,
+                "obs_horizon": obs_horizon,
                 **s_feats,
             }
             rows.append(row)
     df = pd.DataFrame(rows)
     return df.replace([np.inf, -np.inf], np.nan)
+
+
+def residualize_on_log_volume(df: pd.DataFrame, feature_cols: Sequence[str]) -> pd.DataFrame:
+    out = df.copy()
+    out["log_volume"] = np.log1p(out["early_n_nodes"].astype(float))
+    for col in feature_cols:
+        resid_col = f"{col}_resid"
+        out[resid_col] = np.nan
+        for _, g in out.groupby(["window_type", "window_value"], sort=False):
+            idx = g.index
+            x = out.loc[idx, "log_volume"].to_numpy(dtype=float)
+            y = out.loc[idx, col].to_numpy(dtype=float)
+            mask = np.isfinite(x) & np.isfinite(y)
+            if mask.sum() == 0:
+                continue
+            resid = np.full_like(y, np.nan, dtype=float)
+            if mask.sum() >= 3 and np.unique(x[mask]).size >= 2:
+                slope, intercept = np.polyfit(x[mask], y[mask], deg=1)
+                pred = intercept + slope * x[mask]
+                resid[mask] = y[mask] - pred
+            else:
+                resid[mask] = y[mask] - float(np.mean(y[mask]))
+            out.loc[idx, resid_col] = resid
+        out[resid_col] = out[resid_col].fillna(0.0)
+    return out
+
+
+def add_structure_tempo_interactions(df: pd.DataFrame, struct_cols: Sequence[str], tempo_col: str, prefix: str) -> List[str]:
+    if tempo_col not in df.columns:
+        return []
+    out_cols: List[str] = []
+    t = df[tempo_col].astype(float)
+    t_norm = (t - t.mean()) / (t.std(ddof=0) + 1e-9)
+    for c in struct_cols:
+        if c not in df.columns:
+            continue
+        s = df[c].astype(float)
+        s_norm = (s - s.mean()) / (s.std(ddof=0) + 1e-9)
+        name = f"{prefix}_{c}_x_{tempo_col}"
+        df[name] = s_norm * t_norm
+        out_cols.append(name)
+    return out_cols
+
+
+def volume_dependence_diagnostics(df: pd.DataFrame, raw_cols: Sequence[str]) -> pd.DataFrame:
+    rows: List[Dict[str, Any]] = []
+    for (wtype, wval), g in df.groupby(["window_type", "window_value"], sort=True):
+        x = np.log1p(g["early_n_nodes"].astype(float).to_numpy())
+        for col in raw_cols:
+            resid_col = f"{col}_resid"
+            y_raw = g[col].astype(float).to_numpy() if col in g.columns else np.array([])
+            y_res = g[resid_col].astype(float).to_numpy() if resid_col in g.columns else np.array([])
+            mask_raw = np.isfinite(x) & np.isfinite(y_raw)
+            mask_res = np.isfinite(x) & np.isfinite(y_res)
+            corr_raw = float(np.corrcoef(x[mask_raw], y_raw[mask_raw])[0, 1]) if mask_raw.sum() >= 3 else np.nan
+            corr_res = float(np.corrcoef(x[mask_res], y_res[mask_res])[0, 1]) if mask_res.sum() >= 3 else np.nan
+            rows.append(
+                {
+                    "window_type": wtype,
+                    "window_value": int(wval),
+                    "feature": col,
+                    "corr_with_log_volume_raw": corr_raw,
+                    "corr_with_log_volume_resid": corr_res,
+                    "n": int(len(g)),
+                }
+            )
+    return pd.DataFrame(rows)
 
 
 def make_preprocessor(features: List[str], use_missing_ind_for_time_to: bool) -> ColumnTransformer:
@@ -503,7 +740,23 @@ def get_cv_splits(df: pd.DataFrame, task: str) -> List[Tuple[np.ndarray, np.ndar
     return [(tr, te) for tr, te in kf.split(idx)]
 
 
-def eval_veracity(df: pd.DataFrame, features: List[str], model_name: str, splits: List[Tuple[np.ndarray, np.ndarray]], xgb_available: bool) -> Tuple[float, float]:
+def mean_and_se(values: Sequence[float]) -> Tuple[float, float]:
+    arr = np.asarray(values, dtype=float)
+    arr = arr[np.isfinite(arr)]
+    if arr.size == 0:
+        return float("nan"), float("nan")
+    if arr.size == 1:
+        return float(arr[0]), 0.0
+    return float(np.mean(arr)), float(np.std(arr, ddof=1) / np.sqrt(arr.size))
+
+
+def eval_veracity_scores(
+    df: pd.DataFrame,
+    features: List[str],
+    model_name: str,
+    splits: List[Tuple[np.ndarray, np.ndarray]],
+    xgb_available: bool,
+) -> np.ndarray:
     x = df[features]
     y = df["y_false"].to_numpy().astype(int)
     scores: List[float] = []
@@ -517,10 +770,16 @@ def eval_veracity(df: pd.DataFrame, features: List[str], model_name: str, splits
         if len(np.unique(y[te])) < 2:
             continue
         scores.append(float(roc_auc_score(y[te], p)))
-    return float(np.mean(scores)), float(np.std(scores))
+    return np.asarray(scores, dtype=float)
 
 
-def eval_reach(df: pd.DataFrame, features: List[str], model_name: str, splits: List[Tuple[np.ndarray, np.ndarray]], xgb_available: bool) -> Tuple[float, float, float, float]:
+def eval_reach_scores(
+    df: pd.DataFrame,
+    features: List[str],
+    model_name: str,
+    splits: List[Tuple[np.ndarray, np.ndarray]],
+    xgb_available: bool,
+) -> Tuple[np.ndarray, np.ndarray]:
     x = df[features]
     y = df["y_reach"].to_numpy().astype(float)
     r2s: List[float] = []
@@ -535,7 +794,46 @@ def eval_reach(df: pd.DataFrame, features: List[str], model_name: str, splits: L
         fold_r2 = float(np.clip(fold_r2, -1.0, 1.0))
         r2s.append(fold_r2)
         maes.append(float(mean_absolute_error(y[te], pred)))
-    return float(np.mean(r2s)), float(np.std(r2s)), float(np.mean(maes)), float(np.std(maes))
+    return np.asarray(r2s, dtype=float), np.asarray(maes, dtype=float)
+
+
+def eval_veracity(df: pd.DataFrame, features: List[str], model_name: str, splits: List[Tuple[np.ndarray, np.ndarray]], xgb_available: bool) -> Tuple[float, float]:
+    scores = eval_veracity_scores(df, features, model_name, splits, xgb_available)
+    return mean_and_se(scores)
+
+
+def eval_reach(df: pd.DataFrame, features: List[str], model_name: str, splits: List[Tuple[np.ndarray, np.ndarray]], xgb_available: bool) -> Tuple[float, float, float, float]:
+    r2s, maes = eval_reach_scores(df, features, model_name, splits, xgb_available)
+    r2_mean, r2_se = mean_and_se(r2s)
+    mae_mean, mae_se = mean_and_se(maes)
+    return r2_mean, r2_se, mae_mean, mae_se
+
+
+def paired_t_test(x0: Sequence[float], x1: Sequence[float]) -> Tuple[float, float, float, float]:
+    x0 = np.asarray(x0, dtype=float)
+    x1 = np.asarray(x1, dtype=float)
+    n = min(x0.size, x1.size)
+    if n < 2:
+        return float("nan"), float("nan"), float("nan"), float("nan")
+    d = (x1[:n] - x0[:n]).astype(float)
+    d = d[np.isfinite(d)]
+    if d.size < 2:
+        return float("nan"), float("nan"), float("nan"), float("nan")
+    delta = float(np.mean(d))
+    sd = float(np.std(d, ddof=1))
+    if sd <= 1e-12:
+        t_stat = 0.0 if abs(delta) <= 1e-12 else float(np.sign(delta) * 1e6)
+        p_val = 1.0 if abs(delta) <= 1e-12 else 0.0
+        return delta, t_stat, p_val, float("nan")
+    t_stat = delta / (sd / np.sqrt(d.size))
+    try:
+        from scipy.stats import t as t_dist
+
+        p_val = float(2.0 * t_dist.sf(abs(t_stat), df=d.size - 1))
+    except Exception:
+        p_val = float(math.erfc(abs(t_stat) / math.sqrt(2.0)))
+    effect = delta / sd
+    return delta, float(t_stat), p_val, float(effect)
 
 
 def add_n_under_ticks(ax: plt.Axes, xvals: Sequence[int], n_map: Dict[int, int]) -> None:
@@ -544,25 +842,69 @@ def add_n_under_ticks(ax: plt.Axes, xvals: Sequence[int], n_map: Dict[int, int])
     ax.set_xticklabels(labels)
 
 
-def plot_three_lines(df: pd.DataFrame, x_col: str, y_col: str, std_col: str, lines: Sequence[str], title: str, ylabel: str, chance_line: Optional[float], n_map: Dict[int, int]) -> plt.Figure:
-    colors = {"baseline": "#4C78A8", "structure_only": "#F58518", "full": "#54A24B"}
+def set_publication_style() -> None:
+    matplotlib.rcParams.update(
+        {
+            "font.family": "serif",
+            "font.serif": ["Times New Roman", "Times", "DejaVu Serif"],
+            "axes.edgecolor": "#222222",
+            "axes.linewidth": 0.8,
+            "axes.titlesize": 12,
+            "axes.labelsize": 11,
+            "xtick.labelsize": 9,
+            "ytick.labelsize": 9,
+            "legend.fontsize": 9,
+            "figure.dpi": 120,
+        }
+    )
+
+
+def plot_three_lines(
+    df: pd.DataFrame,
+    x_col: str,
+    y_col: str,
+    se_col: str,
+    lines: Sequence[str],
+    title: str,
+    ylabel: str,
+    chance_line: Optional[float],
+    n_map: Dict[int, int],
+) -> plt.Figure:
+    colors = {
+        "baseline": "#1F4E79",
+        "structure_only": "#B36A00",
+        "full": "#2E7D32",
+        "interaction_full": "#7A1F5C",
+    }
     fig, ax = plt.subplots(figsize=(8, 5))
     xvals = sorted(df[x_col].unique())
     for line in lines:
         d = df[df["feature_set"] == line].sort_values(x_col)
         x = d[x_col].to_numpy()
         y = d[y_col].to_numpy()
-        s = d[std_col].to_numpy()
-        ax.plot(x, y, marker="o", linewidth=2, label=line.replace("_", "-"), color=colors.get(line, None))
-        ax.fill_between(x, y - s, y + s, alpha=0.2, color=colors.get(line, None))
+        se = d[se_col].to_numpy()
+        ci95 = 1.96 * se
+        ax.errorbar(
+            x,
+            y,
+            yerr=ci95,
+            marker="o",
+            linewidth=1.8,
+            capsize=3.5,
+            markersize=4.5,
+            label=line.replace("_", "-"),
+            color=colors.get(line, None),
+        )
     if chance_line is not None:
-        ax.axhline(chance_line, color="gray", linestyle="--", linewidth=1)
+        ax.axhline(chance_line, color="#666666", linestyle="--", linewidth=1)
     ax.set_title(title)
     ax.set_xlabel("Window")
     ax.set_ylabel(ylabel)
-    ax.grid(True, axis="y", alpha=0.3)
+    ax.grid(True, axis="y", alpha=0.2, linestyle=":")
     add_n_under_ticks(ax, xvals, n_map)
-    ax.legend()
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.legend(frameon=False)
     fig.tight_layout()
     return fig
 
@@ -618,8 +960,10 @@ def permutation_test(
     return observed, null_scores, p_value
 
 
-def main() -> None:
+def main(data_dir: Path, out_dir: Path) -> None:
+    configure_paths(data_dir, out_dir)
     ensure_dirs()
+    set_publication_style()
     created_files: List[str] = []
     run_log_lines: List[str] = []
     exclusions: List[str] = []
@@ -684,6 +1028,21 @@ def main() -> None:
     # Feature tables for windows
     time_df = make_time_feature_rows(cascades, TIME_WINDOWS, RNG)
     k_df = make_k_feature_rows(cascades, K_WINDOWS, RNG)
+    time_df = residualize_on_log_volume(time_df, RAW_STRUCTURE_SHAPE)
+    k_df = residualize_on_log_volume(k_df, RAW_STRUCTURE_SHAPE)
+    time_inter_cols = add_structure_tempo_interactions(time_df, STRUCTURE_BUNDLE_C, "early_growth_rate", "int_time")
+    k_inter_cols = add_structure_tempo_interactions(k_df, STRUCTURE_BUNDLE_C, "early_growth_rate_k", "int_k")
+
+    vol_diag = pd.concat(
+        [
+            volume_dependence_diagnostics(time_df, RAW_STRUCTURE_SHAPE),
+            volume_dependence_diagnostics(k_df, RAW_STRUCTURE_SHAPE),
+        ],
+        ignore_index=True,
+    )
+    p_vol_diag = OUT_TABLES / "volume_dependence_diagnostics.csv"
+    vol_diag.to_csv(p_vol_diag, index=False)
+    created_files.append(str(p_vol_diag))
 
     time_df = time_df.sort_values(["window_value", "dataset", "cascade_id"]).reset_index(drop=True)
     k_df = k_df.sort_values(["window_value", "dataset", "cascade_id"]).reset_index(drop=True)
@@ -701,6 +1060,17 @@ def main() -> None:
         n_used_by_t[t] = len(df_t)
         coverage_by_t[t] = float((df_t["early_n_nodes"] >= 1).mean())
 
+    veracity_splits_by_k: Dict[int, List[Tuple[np.ndarray, np.ndarray]]] = {}
+    reach_splits_by_k: Dict[int, List[Tuple[np.ndarray, np.ndarray]]] = {}
+    n_used_by_k: Dict[int, int] = {}
+    coverage_by_k: Dict[int, float] = {}
+    for k in K_WINDOWS:
+        df_k = k_df[k_df["window_value"] == k].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
+        veracity_splits_by_k[k] = get_cv_splits(df_k, "veracity")
+        reach_splits_by_k[k] = get_cv_splits(df_k, "reach")
+        n_used_by_k[k] = len(df_k)
+        coverage_by_k[k] = float((df_k["early_n_nodes"] >= 1).mean())
+
     use_xgb = os.environ.get("THESIS_USE_XGBOOST", "0") == "1"
     if use_xgb:
         try:
@@ -714,206 +1084,246 @@ def main() -> None:
         xgb_available = False
         xgb_note = "xgboost disabled for this run (OpenMP SHM limitation); using GradientBoosting fallback"
 
-    # STEP 1 Time-window main figures and table (baseline models only)
+    # STEP 1 Primary K-window results with residualized shape + dynamics + interactions
     step1_rows: List[Dict[str, Any]] = []
-    for t in TIME_WINDOWS:
-        df_t = time_df[time_df["window_value"] == t].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
+    step1_tests: List[Dict[str, Any]] = []
+    for k in K_WINDOWS:
+        df_k = k_df[k_df["window_value"] == k].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
 
         feature_sets = {
-            "baseline": BASELINE_TIME,
+            "baseline": BASELINE_K,
             "structure_only": STRUCTURE_BUNDLE_C,
-            "full": BASELINE_TIME + STRUCTURE_BUNDLE_C,
+            "full": BASELINE_K + STRUCTURE_BUNDLE_C + DYNAMIC_BUNDLE_H,
+            "interaction_full": BASELINE_K + STRUCTURE_BUNDLE_C + DYNAMIC_BUNDLE_H + k_inter_cols,
         }
 
         for fs_name, features in feature_sets.items():
-            auc_m, auc_s = eval_veracity(df_t, features, "logit", veracity_splits_by_t[t], xgb_available)
+            auc_m, auc_se = eval_veracity(df_k, features, "logit", veracity_splits_by_k[k], xgb_available)
             step1_rows.append(
                 {
                     "task": "veracity",
-                    "window_type": "time",
-                    "window_value": t,
+                    "window_type": "k",
+                    "window_value": k,
                     "feature_set": fs_name,
                     "model": "logit",
                     "metric": "auc",
                     "mean": auc_m,
-                    "std": auc_s,
-                    "N_used": len(df_t),
+                    "se": auc_se,
+                    "N_used": len(df_k),
                 }
             )
 
-            r2_m, r2_s, mae_m, mae_s = eval_reach(df_t, features, "ols", reach_splits_by_t[t], xgb_available)
+            r2_m, r2_se, mae_m, mae_se = eval_reach(df_k, features, "ols", reach_splits_by_k[k], xgb_available)
             step1_rows.append(
                 {
                     "task": "reach",
-                    "window_type": "time",
-                    "window_value": t,
+                    "window_type": "k",
+                    "window_value": k,
                     "feature_set": fs_name,
                     "model": "OLS",
                     "metric": "r2",
                     "mean": r2_m,
-                    "std": r2_s,
-                    "N_used": len(df_t),
+                    "se": r2_se,
+                    "N_used": len(df_k),
                 }
             )
             step1_rows.append(
                 {
                     "task": "reach",
-                    "window_type": "time",
-                    "window_value": t,
+                    "window_type": "k",
+                    "window_value": k,
                     "feature_set": fs_name,
                     "model": "OLS",
                     "metric": "mae",
                     "mean": mae_m,
-                    "std": mae_s,
-                    "N_used": len(df_t),
+                    "se": mae_se,
+                    "N_used": len(df_k),
                 }
             )
 
+        # paired tests on identical folds: baseline vs interaction_full
+        v_base = eval_veracity_scores(df_k, feature_sets["baseline"], "logit", veracity_splits_by_k[k], xgb_available)
+        v_int = eval_veracity_scores(df_k, feature_sets["interaction_full"], "logit", veracity_splits_by_k[k], xgb_available)
+        d_auc, t_auc, p_auc, e_auc = paired_t_test(v_base, v_int)
+        step1_tests.append(
+            {
+                "task": "veracity",
+                "metric": "auc",
+                "window_type": "k",
+                "window_value": k,
+                "delta_mean": d_auc,
+                "t_stat": t_auc,
+                "p_value": p_auc,
+                "effect_size_dz": e_auc,
+                "n_folds": min(len(v_base), len(v_int)),
+            }
+        )
+
+        r_base, _ = eval_reach_scores(df_k, feature_sets["baseline"], "ols", reach_splits_by_k[k], xgb_available)
+        r_int, _ = eval_reach_scores(df_k, feature_sets["interaction_full"], "ols", reach_splits_by_k[k], xgb_available)
+        d_r2, t_r2, p_r2, e_r2 = paired_t_test(r_base, r_int)
+        step1_tests.append(
+            {
+                "task": "reach",
+                "metric": "r2",
+                "window_type": "k",
+                "window_value": k,
+                "delta_mean": d_r2,
+                "t_stat": t_r2,
+                "p_value": p_r2,
+                "effect_size_dz": e_r2,
+                "n_folds": min(len(r_base), len(r_int)),
+            }
+        )
+
     step1_df = pd.DataFrame(step1_rows)
-    p_step1 = OUT_TABLES / "results_time_main.csv"
+    p_step1 = OUT_TABLES / "results_k_primary.csv"
     step1_df.to_csv(p_step1, index=False)
     created_files.append(str(p_step1))
+    p_step1_test = OUT_TABLES / "k_primary_paired_ttests.csv"
+    pd.DataFrame(step1_tests).to_csv(p_step1_test, index=False)
+    created_files.append(str(p_step1_test))
 
     fig1_df = step1_df[(step1_df["task"] == "veracity") & (step1_df["metric"] == "auc")]
     fig1 = plot_three_lines(
         fig1_df,
         x_col="window_value",
         y_col="mean",
-        std_col="std",
-        lines=["baseline", "structure_only", "full"],
-        title="Veracity (AUC) vs Time Window",
+        se_col="se",
+        lines=["baseline", "structure_only", "full", "interaction_full"],
+        title="Veracity (AUC) vs K-window",
         ylabel="ROC-AUC",
         chance_line=0.5,
-        n_map=n_used_by_t,
+        n_map=n_used_by_k,
     )
-    created_files.extend(save_figure(fig1, "F1T_time_veracity_baseline_full"))
+    created_files.extend(save_figure(fig1, "F1K_k_veracity_primary"))
 
     fig2_df = step1_df[(step1_df["task"] == "reach") & (step1_df["metric"] == "r2")]
     fig2 = plot_three_lines(
         fig2_df,
         x_col="window_value",
         y_col="mean",
-        std_col="std",
-        lines=["baseline", "structure_only", "full"],
-        title="Reach (R^2) vs Time Window",
+        se_col="se",
+        lines=["baseline", "structure_only", "full", "interaction_full"],
+        title="Reach (R^2) vs K-window",
         ylabel="R^2",
         chance_line=None,
-        n_map=n_used_by_t,
+        n_map=n_used_by_k,
     )
-    created_files.extend(save_figure(fig2, "F2T_time_reach_baseline_full"))
+    created_files.extend(save_figure(fig2, "F2K_k_reach_primary"))
 
     created_files.append(
         write_caption(
-            "F1T",
-            "Time-window veracity results (Twitter15/16). ROC-AUC from 5-fold stratified CV using logistic regression for baseline, structure-only (Bundle C), and full features; shaded regions are ±1 SD. Dashed line marks chance level (0.5), and N per window is shown below ticks.",
+            "F1K",
+            "Primary size-window veracity results. Features include baseline tempo, residualized shape descriptors, Hawkes-inspired dynamics, and explicit structure-tempo interactions. Points show mean CV AUC and bars show 95% CI from SE.",
         )
     )
     created_files.append(
         write_caption(
-            "F2T",
-            "Time-window reach results (Twitter15/16). R^2 from 5-fold CV using OLS for baseline, structure-only (Bundle C), and full features; shaded regions are ±1 SD. Target is log(1 + final_size), and N per window is shown below ticks.",
+            "F2K",
+            "Primary size-window reach results. Size-based windows hold early volume fixed while testing whether residualized structural shape and dynamics add signal beyond baseline tempo. Error bars are 95% CIs from SE.",
         )
     )
 
-    # STEP 2 Full-only model family comparison
+    # STEP 2 Full-only model family comparison on K windows
     step2_rows: List[Dict[str, Any]] = []
-    for t in TIME_WINDOWS:
-        df_t = time_df[time_df["window_value"] == t].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
-        full_features = BASELINE_TIME + STRUCTURE_BUNDLE_C
+    full_features_k = BASELINE_K + STRUCTURE_BUNDLE_C + DYNAMIC_BUNDLE_H + k_inter_cols
+    for k in K_WINDOWS:
+        df_k = k_df[k_df["window_value"] == k].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
 
         for m in ["logit", "rf", "xgb"]:
-            auc_m, auc_s = eval_veracity(df_t, full_features, m, veracity_splits_by_t[t], xgb_available)
+            auc_m, auc_se = eval_veracity(df_k, full_features_k, m, veracity_splits_by_k[k], xgb_available)
             step2_rows.append(
                 {
                     "task": "veracity",
-                    "window_minutes": t,
+                    "window_k": k,
                     "model": m,
                     "metric": "auc",
                     "mean": auc_m,
-                    "std": auc_s,
-                    "N_used": len(df_t),
+                    "se": auc_se,
+                    "N_used": len(df_k),
                 }
             )
 
         for m in ["ols", "rfreg", "xgbreg"]:
-            r2_m, r2_s, mae_m, mae_s = eval_reach(df_t, full_features, m, reach_splits_by_t[t], xgb_available)
+            r2_m, r2_se, mae_m, mae_se = eval_reach(df_k, full_features_k, m, reach_splits_by_k[k], xgb_available)
             step2_rows.append(
                 {
                     "task": "reach",
-                    "window_minutes": t,
+                    "window_k": k,
                     "model": m,
                     "metric": "r2",
                     "mean": r2_m,
-                    "std": r2_s,
-                    "N_used": len(df_t),
+                    "se": r2_se,
+                    "N_used": len(df_k),
                 }
             )
             step2_rows.append(
                 {
                     "task": "reach",
-                    "window_minutes": t,
+                    "window_k": k,
                     "model": m,
                     "metric": "mae",
                     "mean": mae_m,
-                    "std": mae_s,
-                    "N_used": len(df_t),
+                    "se": mae_se,
+                    "N_used": len(df_k),
                 }
             )
 
     step2_df = pd.DataFrame(step2_rows)
-    p_step2 = OUT_TABLES / "model_family_comparison_time_full.csv"
+    p_step2 = OUT_TABLES / "model_family_comparison_k_full.csv"
     step2_df.to_csv(p_step2, index=False)
     created_files.append(str(p_step2))
 
     fig3, axes = plt.subplots(1, 2, figsize=(12, 5), sharex=True)
-    colors = {"logit": "#4C78A8", "rf": "#F58518", "xgb": "#54A24B", "ols": "#4C78A8", "rfreg": "#F58518", "xgbreg": "#54A24B"}
+    colors = {"logit": "#1F4E79", "rf": "#B36A00", "xgb": "#2E7D32", "ols": "#1F4E79", "rfreg": "#B36A00", "xgbreg": "#2E7D32"}
 
     for m in ["logit", "rf", "xgb"]:
-        d = step2_df[(step2_df["task"] == "veracity") & (step2_df["metric"] == "auc") & (step2_df["model"] == m)].sort_values("window_minutes")
-        x = d["window_minutes"].to_numpy()
+        d = step2_df[(step2_df["task"] == "veracity") & (step2_df["metric"] == "auc") & (step2_df["model"] == m)].sort_values("window_k")
+        x = d["window_k"].to_numpy()
         y = d["mean"].to_numpy()
-        s = d["std"].to_numpy()
-        axes[0].plot(x, y, marker="o", linewidth=2, label=m, color=colors[m])
-        axes[0].fill_between(x, y - s, y + s, alpha=0.2, color=colors[m])
+        se = d["se"].to_numpy()
+        axes[0].errorbar(x, y, yerr=1.96 * se, marker="o", linewidth=1.8, capsize=3.0, label=m, color=colors[m])
 
     for m in ["ols", "rfreg", "xgbreg"]:
-        d = step2_df[(step2_df["task"] == "reach") & (step2_df["metric"] == "r2") & (step2_df["model"] == m)].sort_values("window_minutes")
-        x = d["window_minutes"].to_numpy()
+        d = step2_df[(step2_df["task"] == "reach") & (step2_df["metric"] == "r2") & (step2_df["model"] == m)].sort_values("window_k")
+        x = d["window_k"].to_numpy()
         y = d["mean"].to_numpy()
-        s = d["std"].to_numpy()
-        axes[1].plot(x, y, marker="o", linewidth=2, label=m, color=colors[m])
-        axes[1].fill_between(x, y - s, y + s, alpha=0.2, color=colors[m])
+        se = d["se"].to_numpy()
+        axes[1].errorbar(x, y, yerr=1.96 * se, marker="o", linewidth=1.8, capsize=3.0, label=m, color=colors[m])
 
     axes[0].set_title("A: Veracity AUC (Full Features)")
     axes[1].set_title("B: Reach R^2 (Full Features)")
     axes[0].set_ylabel("AUC")
     axes[1].set_ylabel("R^2")
     for ax in axes:
-        ax.grid(True, axis="y", alpha=0.3)
-        add_n_under_ticks(ax, TIME_WINDOWS, n_used_by_t)
-        ax.set_xlabel("Time window (minutes)")
-        ax.legend()
+        ax.grid(True, axis="y", alpha=0.2, linestyle=":")
+        add_n_under_ticks(ax, K_WINDOWS, n_used_by_k)
+        ax.set_xlabel("K window (nodes)")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.legend(frameon=False)
     fig3.tight_layout()
     created_files.extend(save_figure(fig3, "F3_model_family_full_only"))
 
     created_files.append(
         write_caption(
             "F3",
-            "Full-feature model-family comparison over time windows. Panel A shows veracity ROC-AUC for logistic regression, random forest, and XGB (or fallback HistGradientBoosting); Panel B shows reach R^2 for OLS, random forest regressor, and XGB regressor (or fallback). Shaded regions are ±1 SD across fixed 5-fold splits.",
+            "Model-family comparison in fixed-size windows using residualized structural shape, Hawkes-inspired dynamics, and interaction terms. Error bars are 95% CIs from SE.",
         )
     )
 
-    # STEP 3 Delta gain by model (full - baseline)
+    # STEP 3 Delta gain by model (full - baseline) on K windows
     step3_rows: List[Dict[str, Any]] = []
-    for t in TIME_WINDOWS:
-        df_t = time_df[time_df["window_value"] == t].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
+    for k in K_WINDOWS:
+        df_k = k_df[k_df["window_value"] == k].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
 
         for m in ["logit", "rf", "xgb"]:
-            b_mean, _ = eval_veracity(df_t, BASELINE_TIME, m, veracity_splits_by_t[t], xgb_available)
+            b_mean, _ = eval_veracity(df_k, BASELINE_K, m, veracity_splits_by_k[k], xgb_available)
             f_mean = float(
                 step2_df[
                     (step2_df["task"] == "veracity")
-                    & (step2_df["window_minutes"] == t)
+                    & (step2_df["window_k"] == k)
                     & (step2_df["model"] == m)
                     & (step2_df["metric"] == "auc")
                 ]["mean"].iloc[0]
@@ -921,7 +1331,7 @@ def main() -> None:
             step3_rows.append(
                 {
                     "task": "veracity",
-                    "window_minutes": t,
+                    "window_k": k,
                     "model": m,
                     "metric": "auc",
                     "baseline_mean": b_mean,
@@ -931,11 +1341,11 @@ def main() -> None:
             )
 
         for m in ["ols", "rfreg", "xgbreg"]:
-            b_r2, _, _, _ = eval_reach(df_t, BASELINE_TIME, m, reach_splits_by_t[t], xgb_available)
+            b_r2, _, _, _ = eval_reach(df_k, BASELINE_K, m, reach_splits_by_k[k], xgb_available)
             f_r2 = float(
                 step2_df[
                     (step2_df["task"] == "reach")
-                    & (step2_df["window_minutes"] == t)
+                    & (step2_df["window_k"] == k)
                     & (step2_df["model"] == m)
                     & (step2_df["metric"] == "r2")
                 ]["mean"].iloc[0]
@@ -943,7 +1353,7 @@ def main() -> None:
             step3_rows.append(
                 {
                     "task": "reach",
-                    "window_minutes": t,
+                    "window_k": k,
                     "model": m,
                     "metric": "r2",
                     "baseline_mean": b_r2,
@@ -953,7 +1363,7 @@ def main() -> None:
             )
 
     step3_df = pd.DataFrame(step3_rows)
-    p_step3 = OUT_TABLES / "delta_gain_by_model_time.csv"
+    p_step3 = OUT_TABLES / "delta_gain_by_model_k.csv"
     step3_df.to_csv(p_step3, index=False)
     created_files.append(str(p_step3))
 
@@ -962,54 +1372,55 @@ def main() -> None:
 
     v_df = step3_df[step3_df["task"] == "veracity"].copy()
     models_v = ["logit", "rf", "xgb"]
-    x = np.arange(len(TIME_WINDOWS))
+    x = np.arange(len(K_WINDOWS))
     for i, m in enumerate(models_v):
-        d = v_df[v_df["model"] == m].sort_values("window_minutes")
+        d = v_df[v_df["model"] == m].sort_values("window_k")
         axes[0].bar(x + (i - 1) * width, d["delta"].to_numpy(), width=width, label=m)
     axes[0].axhline(0.0, color="black", linewidth=1)
     axes[0].set_xticks(x)
-    axes[0].set_xticklabels([str(t) for t in TIME_WINDOWS])
+    axes[0].set_xticklabels([str(k) for k in K_WINDOWS])
     axes[0].set_title("A: ΔAUC (Full - Baseline)")
-    axes[0].set_xlabel("Time window (minutes)")
+    axes[0].set_xlabel("K window (nodes)")
     axes[0].set_ylabel("ΔAUC")
     axes[0].legend()
 
     r_df = step3_df[step3_df["task"] == "reach"].copy()
     models_r = ["ols", "rfreg", "xgbreg"]
     for i, m in enumerate(models_r):
-        d = r_df[r_df["model"] == m].sort_values("window_minutes")
+        d = r_df[r_df["model"] == m].sort_values("window_k")
         axes[1].bar(x + (i - 1) * width, d["delta"].to_numpy(), width=width, label=m)
     axes[1].axhline(0.0, color="black", linewidth=1)
     axes[1].set_xticks(x)
-    axes[1].set_xticklabels([str(t) for t in TIME_WINDOWS])
+    axes[1].set_xticklabels([str(k) for k in K_WINDOWS])
     axes[1].set_title("B: ΔR^2 (Full - Baseline)")
-    axes[1].set_xlabel("Time window (minutes)")
+    axes[1].set_xlabel("K window (nodes)")
     axes[1].set_ylabel("ΔR^2")
     axes[1].legend()
 
     for ax in axes:
-        ax.grid(True, axis="y", alpha=0.3)
+        ax.grid(True, axis="y", alpha=0.2, linestyle=":")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
     fig4.tight_layout()
     created_files.extend(save_figure(fig4, "F4_delta_gain_by_model"))
 
     created_files.append(
         write_caption(
             "F4",
-            "Performance gain from adding structure features (Bundle C): delta = metric(full) - metric(baseline) by model and time window. Panel A reports ΔAUC for veracity; Panel B reports ΔR^2 for reach. Horizontal line marks zero improvement.",
+            "Performance gain from adding residualized structure, dynamics, and structure-tempo interactions in fixed-size windows. Panel A reports ΔAUC for veracity; Panel B reports ΔR^2 for reach.",
         )
     )
 
-    # STEP 4A Permutation test at T=60 (full features)
-    df60 = time_df[time_df["window_value"] == 60].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
-    full_features = BASELINE_TIME + STRUCTURE_BUNDLE_C
+    # STEP 4A Permutation test at K=60 (full features)
+    df60 = k_df[k_df["window_value"] == 60].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
 
     ver_model_perm = "logit"
     observed_auc, null_auc, p_auc = permutation_test(
         df60,
-        full_features,
+        full_features_k,
         task="veracity",
         model_name=ver_model_perm,
-        splits=veracity_splits_by_t[60],
+        splits=veracity_splits_by_k[60],
         xgb_available=xgb_available,
         n_permutations=200,
         rng=np.random.default_rng(SEED + 101),
@@ -1017,10 +1428,10 @@ def main() -> None:
 
     observed_r2, null_r2, p_r2 = permutation_test(
         df60,
-        full_features,
+        full_features_k,
         task="reach",
         model_name="ols",
-        splits=reach_splits_by_t[60],
+        splits=reach_splits_by_k[60],
         xgb_available=xgb_available,
         n_permutations=200,
         rng=np.random.default_rng(SEED + 202),
@@ -1032,6 +1443,8 @@ def main() -> None:
                 "task": "veracity",
                 "model": ver_model_perm,
                 "metric": "auc",
+                "window_type": "k",
+                "window_value": 60,
                 "observed_score": observed_auc,
                 "null_mean": float(np.mean(null_auc)),
                 "null_std": float(np.std(null_auc)),
@@ -1042,6 +1455,8 @@ def main() -> None:
                 "task": "reach",
                 "model": "ols",
                 "metric": "r2",
+                "window_type": "k",
+                "window_value": 60,
                 "observed_score": observed_r2,
                 "null_mean": float(np.mean(null_r2)),
                 "null_std": float(np.std(null_r2)),
@@ -1050,7 +1465,7 @@ def main() -> None:
             },
         ]
     )
-    p_perm_summary = OUT_TABLES / "permutation_test_60min.csv"
+    p_perm_summary = OUT_TABLES / "permutation_test_k60.csv"
     perm_summary.to_csv(p_perm_summary, index=False)
     created_files.append(str(p_perm_summary))
 
@@ -1060,7 +1475,7 @@ def main() -> None:
     for i, s in enumerate(null_r2):
         perm_null_rows.append({"task": "reach", "metric": "r2", "perm_idx": i, "null_score": float(s)})
     perm_null_df = pd.DataFrame(perm_null_rows)
-    p_perm_null = OUT_TABLES / "permutation_null_scores_60min.csv"
+    p_perm_null = OUT_TABLES / "permutation_null_scores_k60.csv"
     perm_null_df.to_csv(p_perm_null, index=False)
     created_files.append(str(p_perm_null))
 
@@ -1085,13 +1500,16 @@ def main() -> None:
     created_files.append(
         write_caption(
             "F5",
-            "Permutation test at T=60 with full features. Histograms show null score distributions from 200 target shuffles (same CV splits). Vertical red lines mark observed scores; p-values are one-sided fractions of null >= observed.",
+            "Permutation test at K=60 with residualized shape, dynamics, and interactions. Histograms show null score distributions from 200 label/target shuffles under fixed CV splits.",
         )
     )
 
-    # STEP 4B Learning curve (full features + baseline models)
+    # STEP 4B Time-window supplementary curve using dynamic + interaction features
     lc_rows: List[Dict[str, Any]] = []
     time_curve_df = make_time_feature_rows(cascades, T_CURVE, np.random.default_rng(SEED + 404))
+    time_curve_df = residualize_on_log_volume(time_curve_df, RAW_STRUCTURE_SHAPE)
+    time_curve_inter_cols = add_structure_tempo_interactions(time_curve_df, STRUCTURE_BUNDLE_C, "early_growth_rate", "int_curve")
+    full_features_time = BASELINE_TIME + STRUCTURE_BUNDLE_C + DYNAMIC_BUNDLE_H + time_curve_inter_cols
     n_used_curve: Dict[int, int] = {}
     for t in T_CURVE:
         dft = time_curve_df[time_curve_df["window_value"] == t].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
@@ -1099,11 +1517,11 @@ def main() -> None:
         v_splits = get_cv_splits(dft, "veracity")
         r_splits = get_cv_splits(dft, "reach")
 
-        auc_m, auc_s = eval_veracity(dft, full_features, "logit", v_splits, xgb_available)
-        lc_rows.append({"task": "veracity", "window_minutes": t, "model": "logit", "metric": "auc", "mean": auc_m, "std": auc_s, "N_used": len(dft)})
+        auc_m, auc_se = eval_veracity(dft, full_features_time, "logit", v_splits, xgb_available)
+        lc_rows.append({"task": "veracity", "window_minutes": t, "model": "logit", "metric": "auc", "mean": auc_m, "se": auc_se, "N_used": len(dft)})
 
-        r2_m, r2_s, _, _ = eval_reach(dft, full_features, "ols", r_splits, xgb_available)
-        lc_rows.append({"task": "reach", "window_minutes": t, "model": "ols", "metric": "r2", "mean": r2_m, "std": r2_s, "N_used": len(dft)})
+        r2_m, r2_se, _, _ = eval_reach(dft, full_features_time, "ols", r_splits, xgb_available)
+        lc_rows.append({"task": "reach", "window_minutes": t, "model": "ols", "metric": "r2", "mean": r2_m, "se": r2_se, "N_used": len(dft)})
 
     lc_df = pd.DataFrame(lc_rows)
     p_lc = OUT_TABLES / "learning_curve_time.csv"
@@ -1115,32 +1533,32 @@ def main() -> None:
     d_auc = lc_df[(lc_df["task"] == "veracity") & (lc_df["metric"] == "auc")].sort_values("window_minutes")
     x = d_auc["window_minutes"].to_numpy()
     y = d_auc["mean"].to_numpy()
-    s = d_auc["std"].to_numpy()
-    axes[0].plot(x, y, marker="o", linewidth=2, color="#4C78A8")
-    axes[0].fill_between(x, y - s, y + s, alpha=0.2, color="#4C78A8")
+    se = d_auc["se"].to_numpy()
+    axes[0].errorbar(x, y, yerr=1.96 * se, marker="o", linewidth=1.8, capsize=3.0, color="#1F4E79")
     axes[0].set_title("A: Learning Curve (Veracity AUC)")
     axes[0].set_ylabel("AUC")
 
     d_r2 = lc_df[(lc_df["task"] == "reach") & (lc_df["metric"] == "r2")].sort_values("window_minutes")
     x2 = d_r2["window_minutes"].to_numpy()
     y2 = d_r2["mean"].to_numpy()
-    s2 = d_r2["std"].to_numpy()
-    axes[1].plot(x2, y2, marker="o", linewidth=2, color="#F58518")
-    axes[1].fill_between(x2, y2 - s2, y2 + s2, alpha=0.2, color="#F58518")
+    se2 = d_r2["se"].to_numpy()
+    axes[1].errorbar(x2, y2, yerr=1.96 * se2, marker="o", linewidth=1.8, capsize=3.0, color="#B36A00")
     axes[1].set_title("B: Learning Curve (Reach R^2)")
     axes[1].set_ylabel("R^2")
 
     for ax in axes:
-        ax.grid(True, axis="y", alpha=0.3)
+        ax.grid(True, axis="y", alpha=0.2, linestyle=":")
         add_n_under_ticks(ax, T_CURVE, n_used_curve)
         ax.set_xlabel("Time window (minutes)")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
     fig6.tight_layout()
     created_files.extend(save_figure(fig6, "F6_learning_curve_time"))
 
     created_files.append(
         write_caption(
             "F6",
-            "Signal accumulation over time windows (full features). Veracity uses logistic regression (AUC), reach uses OLS (R^2), each with fixed 5-fold CV per window. Shaded regions denote ±1 SD and N is shown below ticks.",
+            "Supplementary time-window signal accumulation with residualized structure, dynamics, and interactions. Error bars are 95% CIs from SE.",
         )
     )
 
@@ -1162,11 +1580,12 @@ def main() -> None:
         feature_sets = {
             "baseline": BASELINE_K,
             "structure_only": STRUCTURE_BUNDLE_C,
-            "full": BASELINE_K + STRUCTURE_BUNDLE_C,
+            "full": BASELINE_K + STRUCTURE_BUNDLE_C + DYNAMIC_BUNDLE_H,
+            "interaction_full": BASELINE_K + STRUCTURE_BUNDLE_C + DYNAMIC_BUNDLE_H + k_inter_cols,
         }
 
         for fs_name, features in feature_sets.items():
-            auc_m, auc_s = eval_veracity(dfk, features, "logit", v_splits, xgb_available)
+            auc_m, auc_se = eval_veracity(dfk, features, "logit", v_splits, xgb_available)
             step5_rows.append(
                 {
                     "task": "veracity",
@@ -1176,12 +1595,12 @@ def main() -> None:
                     "model": "logit",
                     "metric": "auc",
                     "mean": auc_m,
-                    "std": auc_s,
+                    "se": auc_se,
                     "N_used": len(dfk),
                 }
             )
 
-            r2_m, r2_s, mae_m, mae_s = eval_reach(dfk, features, "ols", r_splits, xgb_available)
+            r2_m, r2_se, mae_m, mae_se = eval_reach(dfk, features, "ols", r_splits, xgb_available)
             step5_rows.append(
                 {
                     "task": "reach",
@@ -1191,7 +1610,7 @@ def main() -> None:
                     "model": "OLS",
                     "metric": "r2",
                     "mean": r2_m,
-                    "std": r2_s,
+                    "se": r2_se,
                     "N_used": len(dfk),
                 }
             )
@@ -1204,7 +1623,7 @@ def main() -> None:
                     "model": "OLS",
                     "metric": "mae",
                     "mean": mae_m,
-                    "std": mae_s,
+                    "se": mae_se,
                     "N_used": len(dfk),
                 }
             )
@@ -1239,8 +1658,8 @@ def main() -> None:
         fig_a1_df,
         x_col="window_value",
         y_col="mean",
-        std_col="std",
-        lines=["baseline", "structure_only", "full"],
+        se_col="se",
+        lines=["baseline", "structure_only", "full", "interaction_full"],
         title="Veracity (AUC) vs K-window",
         ylabel="ROC-AUC",
         chance_line=0.5,
@@ -1253,8 +1672,8 @@ def main() -> None:
         fig_a2_df,
         x_col="window_value",
         y_col="mean",
-        std_col="std",
-        lines=["baseline", "structure_only", "full"],
+        se_col="se",
+        lines=["baseline", "structure_only", "full", "interaction_full"],
         title="Reach (R^2) vs K-window",
         ylabel="R^2",
         chance_line=None,
@@ -1265,19 +1684,19 @@ def main() -> None:
     created_files.append(
         write_caption(
             "A1K",
-            "K-window veracity results (AUC) for baseline, structure-only (Bundle C), and full features using logistic regression with 5-fold stratified CV. Observed nodes are first K in BFS order from the full cascade tree.",
+            "Supplementary K-window veracity view with baseline, residualized shape-only, full dynamic, and interaction-full feature sets. Error bars are 95% CIs from SE.",
         )
     )
     created_files.append(
         write_caption(
             "A2K",
-            "K-window reach results (R^2) for baseline, structure-only (Bundle C), and full features using OLS with 5-fold CV. Target is computed from full final size as log(1 + final_size).",
+            "Supplementary K-window reach view with baseline, residualized shape-only, full dynamic, and interaction-full feature sets. Error bars are 95% CIs from SE.",
         )
     )
 
-    # Tuned decision-tree check at T=60 using full features.
-    df60_tree = time_df[time_df["window_value"] == 60].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
-    tree_features = BASELINE_TIME + STRUCTURE_BUNDLE_C
+    # Tuned decision-tree check at K=60 using full interaction feature set.
+    df60_tree = k_df[k_df["window_value"] == 60].sort_values(["dataset", "cascade_id"]).reset_index(drop=True)
+    tree_features = full_features_k
     x_tree = df60_tree[tree_features]
     y_tree_cls = df60_tree["y_false"].to_numpy().astype(int)
     y_tree_reg = df60_tree["y_reach"].to_numpy().astype(float)
@@ -1312,34 +1731,37 @@ def main() -> None:
         [
             {
                 "task": "veracity",
-                "window_minutes": 60,
+                "window_type": "k",
+                "window_value": 60,
                 "model": "decision_tree_tuned",
                 "metric": "auc",
-                "mean": float(np.mean(tree_auc_scores)),
-                "std": float(np.std(tree_auc_scores)),
+                "mean": mean_and_se(tree_auc_scores)[0],
+                "se": mean_and_se(tree_auc_scores)[1],
                 "N_used": len(df60_tree),
             },
             {
                 "task": "reach",
-                "window_minutes": 60,
+                "window_type": "k",
+                "window_value": 60,
                 "model": "decision_tree_tuned",
                 "metric": "r2",
-                "mean": float(np.mean(tree_r2_scores)),
-                "std": float(np.std(tree_r2_scores)),
+                "mean": mean_and_se(tree_r2_scores)[0],
+                "se": mean_and_se(tree_r2_scores)[1],
                 "N_used": len(df60_tree),
             },
             {
                 "task": "reach",
-                "window_minutes": 60,
+                "window_type": "k",
+                "window_value": 60,
                 "model": "decision_tree_tuned",
                 "metric": "mae",
-                "mean": float(np.mean(tree_mae_scores)),
-                "std": float(np.std(tree_mae_scores)),
+                "mean": mean_and_se(tree_mae_scores)[0],
+                "se": mean_and_se(tree_mae_scores)[1],
                 "N_used": len(df60_tree),
             },
         ]
     )
-    p_tree_eval = OUT_TABLES / "tree_tuned_60min.csv"
+    p_tree_eval = OUT_TABLES / "tree_tuned_k60.csv"
     tree_eval_df.to_csv(p_tree_eval, index=False)
     created_files.append(str(p_tree_eval))
 
@@ -1351,8 +1773,12 @@ def main() -> None:
         "learning_curve_windows": T_CURVE,
         "baseline_time": BASELINE_TIME,
         "baseline_k": BASELINE_K,
-        "structure_bundle": "Bundle C",
+        "structure_bundle": "Residualized shape bundle + Hawkes dynamics",
+        "raw_structure_shape_features": RAW_STRUCTURE_SHAPE,
         "structure_features": STRUCTURE_BUNDLE_C,
+        "dynamic_features": DYNAMIC_BUNDLE_H,
+        "time_interaction_features": time_inter_cols,
+        "k_interaction_features": k_inter_cols,
         "cv_veracity": {"type": "StratifiedKFold", "n_splits": 5, "shuffle": True, "random_state": 42},
         "cv_reach": {"type": "KFold", "n_splits": 5, "shuffle": True, "random_state": 42},
         "xgboost": xgb_available,
@@ -1380,6 +1806,9 @@ def main() -> None:
     run_log_lines.append("Time-window coverage (>=1 observed node):")
     for t in TIME_WINDOWS:
         run_log_lines.append(f"- T={t}: coverage={coverage_by_t[t]:.4f}, N_used={n_used_by_t[t]}")
+    run_log_lines.append("K-window coverage (>=1 observed node):")
+    for k in K_WINDOWS:
+        run_log_lines.append(f"- K={k}: coverage={coverage_by_k[k]:.4f}, N_used={n_used_by_k[k]}")
     run_log_lines.append("K-window exclusions/checks:")
     run_log_lines.extend([f"- {x}" for x in k_exclusion_log])
     run_log_lines.append("Created files:")
@@ -1394,5 +1823,23 @@ def main() -> None:
         print(p)
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run thesis diffusion analysis pipeline.")
+    parser.add_argument(
+        "--data_dir",
+        type=Path,
+        default=Path("Data"),
+        help="Path to data root. If it contains rumor_detection_acl2017/ , that subdir is used automatically.",
+    )
+    parser.add_argument(
+        "--out_dir",
+        type=Path,
+        default=Path("thesis_outputs"),
+        help="Directory for generated outputs (tables/figures/logs/captions).",
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(data_dir=args.data_dir, out_dir=args.out_dir)
