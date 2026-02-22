@@ -1,21 +1,28 @@
 # Data Setup
 
-The pipeline expects `--data_dir` to point to a folder containing the Twitter15/16 tree dataset.
+The current pipeline expects the Twitter15/16 tree dataset under `Data/rumor_detection_acl2017/`.
 
-Default command in this repo:
-```bash
-python3 main.py --data_dir Data --out_dir thesis_outputs
+Minimal required structure:
+```text
+Data/
+└── rumor_detection_acl2017/
+    ├── twitter15/
+    │   ├── label.txt
+    │   └── tree/
+    │       ├── <cascade_id>.txt
+    │       └── ...
+    └── twitter16/
+        ├── label.txt
+        └── tree/
+            ├── <cascade_id>.txt
+            └── ...
 ```
 
-With this default, the script automatically looks for:
-- `Data/rumor_detection_acl2017/twitter15/`
-- `Data/rumor_detection_acl2017/twitter16/`
-
-Required files used by the current analysis:
+Required files used by `main.py`:
 - `Data/rumor_detection_acl2017/twitter15/label.txt`
 - `Data/rumor_detection_acl2017/twitter16/label.txt`
 - `Data/rumor_detection_acl2017/twitter15/tree/*.txt`
 - `Data/rumor_detection_acl2017/twitter16/tree/*.txt`
 
-If your data is stored elsewhere, pass a different `--data_dir`.
-The code also supports pointing directly to the `rumor_detection_acl2017` folder.
+If you pass `--data_dir Data`, the code automatically uses `Data/rumor_detection_acl2017/` when present.
+If your copy is elsewhere, run with `--data_dir <your_data_root>`.
