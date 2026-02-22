@@ -4,17 +4,16 @@
 This repository evaluates whether early diffusion structure and timing in rumor conversation trees can predict two outcomes: (1) veracity (false vs. non-false) and (2) final cascade reach (log-transformed). The main pipeline uses fixed random seeds, extracts early-window features, residualizes structural features against early volume, adds dynamic and interaction terms, and evaluates multiple model families with cross-validation and permutation tests. The repository is organized for end-to-end reproducibility with a single entry command: `bash reproduce.sh`.
 
 ## Main Findings (from current pipeline outputs)
-- Veracity AUC is consistently above chance in size-based windows; primary peak is around **AUC ~0.657 at k=20**.
-- Reach prediction benefits more from richer nonlinear structure/dynamic features than veracity does, especially in larger windows.
-- Permutation test at `k=60` shows strong signal:
-  - Veracity: observed AUC **0.640** vs null mean **0.499** (`thesis_outputs/tables/permutation_test_k60.csv`)
-  - Reach: observed R² **0.254** vs null mean **-0.302** (`thesis_outputs/tables/permutation_test_k60.csv`)
-- Key output files:
-  - `thesis_outputs/tables/results_k_primary.csv`
-  - `thesis_outputs/tables/k_primary_paired_ttests.csv`
-  - `thesis_outputs/figures/F1K_k_veracity_primary.png`
-  - `thesis_outputs/figures/F2K_k_reach_primary.png`
-  - `thesis_outputs/logs/run_config.json`
+- Primary size-window trend: veracity (logit, full features) peaks at **AUC = 0.657 (k=20)**, and reach (OLS, full features) peaks at **R² = 0.719 (k=180)** (`thesis_outputs/tables/results_k_primary.csv`, `thesis_outputs/figures/F1K_k_veracity_primary.png`, `thesis_outputs/figures/F2K_k_reach_primary.png`).
+- Baseline vs full: adding structure/dynamics improves best veracity from **0.650 to 0.657 AUC** and best reach from **0.612 to 0.719 R²** (`thesis_outputs/tables/results_k_primary.csv`, `thesis_outputs/figures/A1K_k_veracity_baseline_full.png`, `thesis_outputs/figures/A2K_k_reach_baseline_full.png`).
+- Model family comparison: best veracity model is **RF at k=180 (AUC = 0.669)**; best reach model is **RF regressor at k=180 (R² = 0.773)** (`thesis_outputs/tables/model_family_comparison_k_full.csv`, `thesis_outputs/figures/F3_model_family_full_only.png`).
+- Incremental gains are heterogeneous across models/windows: largest positive delta is **reach RF-reg at k=45 (+0.231 R²)**; largest negative delta is **reach OLS at k=45 (-0.917 R²)** (`thesis_outputs/tables/delta_gain_by_model_k.csv`, `thesis_outputs/figures/F4_delta_gain_by_model.png`).
+- Paired fold tests: strongest improvements are concentrated in reach at larger windows (for example, **k=120 p=3.17e-06**, **k=180 p=7.43e-05**), while veracity deltas are modest (`thesis_outputs/tables/k_primary_paired_ttests.csv`).
+- Permutation validation at k=60 confirms non-random signal: veracity observed **AUC = 0.640** vs null mean **0.499**; reach observed **R² = 0.254** vs null mean **-0.302** (`thesis_outputs/tables/permutation_test_k60.csv`, `thesis_outputs/tables/permutation_null_scores_k60.csv`, `thesis_outputs/figures/F5_permutation_test_signal.png`).
+- Window coverage remains high through moderate k and declines at large k: coverage is **100% at k<=45**, **99.9% at k=60**, **88.5% at k=120**, **65.5% at k=180** (`thesis_outputs/tables/coverage_k.csv`).
+- Volume-dependence diagnostics show structural features can be strongly volume-correlated before adjustment; residualized versions are numerically near zero correlation with log-volume (`thesis_outputs/tables/volume_dependence_diagnostics.csv`).
+- Time-window learning pattern (reference analysis): best veracity appears early (**10 min AUC = 0.669**), while reach improves with longer windows (**180 min R² = 0.752**) (`thesis_outputs/tables/learning_curve_time.csv`, `thesis_outputs/figures/F6_learning_curve_time.png`).
+- Interpretable nonlinear check: tuned decision tree at k=60 gives **veracity AUC = 0.582** and **reach R² = 0.309** (`thesis_outputs/tables/tree_tuned_k60.csv`).
 
 
 ## Key Figures
