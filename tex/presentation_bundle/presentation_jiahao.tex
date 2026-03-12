@@ -1,0 +1,154 @@
+% !TEX program = pdflatex
+\documentclass{beamer}
+
+\usetheme{Boadilla}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\title{Early Diffusion Signals for Predicting Reach and Veracity in Social Media Rumor Cascades}
+\subtitle{Paper track: thesis presentation}
+\author{Jiahao Zhang}
+\institute{University of Chicago}
+\date{February 2026}
+
+\begin{document}
+
+\section{Background}
+\begin{frame}
+\titlepage
+% NOTES: Open with the core research theme and keep the framing concise. Transition quickly to the agenda.
+\end{frame}
+
+\begin{frame}{Outline}
+\tableofcontents
+% NOTES: Signal the flow: motivation, setup, results, implications, and next steps. Keep timing tight for a 5--10 minute talk.
+\end{frame}
+
+\begin{frame}{Motivation: Why Early Warning Matters}
+\begin{itemize}
+\item \textbf{Timing Problem:} misinformation can scale before reliable verification arrives.
+\item \textbf{Example 1 (large reach):} ``did you know that microsoft actually uses dog noses for thumbsticks on the gamecube controller?'' (Twitter16, root \texttt{640644123339431936}).
+\item \textbf{Example 2 (smaller reach):} ``president of argentina adopts jewish godson to 'stop him turning into a werewolf' '' (Twitter15, root \texttt{549124560793374720}).
+\item \textbf{Early Similarity:} at \(T=60\) min both cascades look very similar in early structure (volume/depth/width around \(65/2/56\sim57\)).
+\item \textbf{Outcome Divergence:} final size diverges sharply (\(1453\) vs \(124\)).
+\item \textbf{Implication:} this is exactly why early-warning signals are valuable for timely triage.
+\end{itemize}
+% NOTES: Keep this slide concrete and narrative: same early snapshot, different eventual reach.
+\end{frame}
+
+\begin{frame}{Brief Literature}
+\begin{itemize}
+\item \textbf{Prior Findings:} prior studies find veracity-linked diffusion differences, but mostly from retrospective or full-cascade analysis (e.g., Vosoughi et al., 2018; Del Vicario et al., 2016).
+\item \textbf{Open Gap:} it remains unclear whether useful signals appear early enough for actionable intervention.
+\item \textbf{This Approach:} we use early observation windows with structural and temporal features beyond early volume alone.
+\item \textbf{Scope Today:} this presentation centers the FibVID main analysis and uses Twitter15/16 as a benchmark comparison.
+\end{itemize}
+% NOTES: Keep the citation visible on the first bullet and keep each bullet title word bolded.
+\end{frame}
+
+\section{Data \& Methods}
+\begin{frame}{Data}
+\begin{itemize}
+\item \textbf{Main dataset:} FibVID claim-level propagation records.
+\item \textbf{Comparative benchmark:} Twitter15/16 rumor cascade benchmark.
+\item \textbf{Main unit of analysis:} one claim-level cascade under a harmonized cascade-compatible representation.
+\item \textbf{FibVID label setup:} binary false vs true in the main specification.
+\item \textbf{Structure means:} for each cascade or claim-level unit we observe propagation links and timestamps:
+\begin{itemize}
+\item nodes = tweets/posts in the cascade
+\item edges = repost/reply propagation links
+\item timestamps = posting time of each node
+\end{itemize}
+\item \textbf{Why this matters:} harmonized or native propagation structure + timing lets us cut the first \(T\) minutes (or first \(k\) nodes) without peeking into the future.
+\end{itemize}
+% NOTES: Keep this slide concrete and reproducible: N, labels, and what "full structure" technically contains.
+\end{frame}
+
+\begin{frame}{Methods}
+\begin{itemize}
+\item \textbf{Step 1: Early-window setup} For each cascade, observe only an early prefix: primary size-based windows (first \(k\) posts, holding early volume fixed) and time-based \(T\) as a robustness check.
+\item \textbf{Step 2: Feature construction} Compute early features from the partial tree: volume baseline, structural shape, temporal/dynamic features, and structure--tempo interactions.
+\item \textbf{Step 3: Task-specific modeling} Same inputs, two targets: reach prediction (regress \(\log(1+\text{final size})\)) and veracity prediction (\textbf{false vs not-false} classification).
+\item \textbf{Step 4: Window-by-window evaluation} Repeat across windows to test when early signals become informative and whether patterns differ by task.
+\end{itemize}
+% NOTES: Walk through pipeline steps once and point to the schematic. Avoid result interpretation on this slide.
+\end{frame}
+
+\section{Results}
+\begin{frame}{Results (Twitter15/16): Veracity Prediction}
+\begin{itemize}
+\item \textbf{Signal Exists:} early diffusion features provide above-chance veracity signal (AUC \(>\) 0.5).
+\item \textbf{Limited Increment:} gains from richer feature bundles are modest across windows.
+\end{itemize}
+\begin{columns}[T,onlytextwidth]
+\column{0.69\textwidth}
+\centering
+\IfFileExists{figs/F1K_k_veracity_primary.pdf}{\includegraphics[width=0.99\linewidth]{figs/F1K_k_veracity_primary.pdf}}{\small (Missing file: figs/F1K_k_veracity_primary.pdf)}
+\column{0.29\textwidth}
+\IfFileExists{tables/twitter15_16_veracity_results.tex}{\input{tables/twitter15_16_veracity_results.tex}}{\small (Missing file: tables/twitter15_16_veracity_results.tex)}
+\end{columns}
+% NOTES: Highlight the main directional takeaway without introducing new metrics. Keep language strictly tied to displayed outputs.
+\end{frame}
+
+\begin{frame}{Results (Twitter15/16): Reach Prediction}
+\begin{itemize}
+\item \textbf{Stronger Predictability:} early diffusion is more informative for reach than for veracity.
+\item \textbf{Window Effect:} improvements from structure/interaction features become clearer as the window expands.
+\end{itemize}
+\begin{columns}[T,onlytextwidth]
+\column{0.69\textwidth}
+\centering
+\IfFileExists{figs/F2K_k_reach_primary.pdf}{\includegraphics[width=0.99\linewidth]{figs/F2K_k_reach_primary.pdf}}{\small (Missing file: figs/F2K_k_reach_primary.pdf)}
+\column{0.29\textwidth}
+\IfFileExists{tables/twitter15_16_reach_results.tex}{\input{tables/twitter15_16_reach_results.tex}}{\small (Missing file: tables/twitter15_16_reach_results.tex)}
+\end{columns}
+% NOTES: Keep comparison conceptual: same framework, different task. Avoid adding claims beyond the shown Twitter15/16 outputs.
+\end{frame}
+
+\begin{frame}{Results: Permutation Test}
+\begin{itemize}
+\item \textbf{Permutation Check:} we ran a permutation test at \(k=60\) to verify the learned signal is not due to random label assignment.
+\end{itemize}
+\begin{columns}[T,onlytextwidth]
+\column{0.49\textwidth}
+\centering
+\small Veracity panel
+\IfFileExists{figs/F5_permutation_test_signal.pdf}{\includegraphics[width=\linewidth,trim=0 0 428 0,clip]{figs/F5_permutation_test_signal.pdf}}{\small (Missing file: figs/F5_permutation_test_signal.pdf)}
+\column{0.49\textwidth}
+\centering
+\small Reach panel
+\IfFileExists{figs/F5_permutation_test_signal.pdf}{\includegraphics[width=\linewidth,trim=428 0 0 0,clip]{figs/F5_permutation_test_signal.pdf}}{\small (Missing file: figs/F5_permutation_test_signal.pdf)}
+\end{columns}
+\end{frame}
+
+\section{Discussion}
+\begin{frame}{Discussion}
+\begin{itemize}
+\item \textbf{Practical Use:} supports earlier triage, monitoring priority, and resource allocation workflows.
+\item \textbf{Conceptual Signal:} early cascade structure appears informative beyond simple early volume counts.
+\item \textbf{Limitations:} dataset and window-design choices may affect transferability and operational fit.
+\item \textbf{Risks to Monitor:} leakage pathways, heavy-tailed outcomes, and sensitivity to evaluation setup.
+\end{itemize}
+% NOTES: Balance practical implications with caution on limits. Frame this as evidence for utility, not a final deployment claim.
+\end{frame}
+
+\section{Next Steps}
+\begin{frame}{Future Work}
+\begin{itemize}
+\item \textbf{New Primary Dataset:} move to FibVID as the main empirical dataset for the next stage, and keep Twitter15/16 as a robustness check because it is older.
+\item \textbf{Reproducible Replication:} rebuild the same early-window pipeline on FibVID (same window definitions, feature groups, and metrics) so results are directly comparable.
+\item \textbf{Focused Validation:} feature ablation (stepwise remove/add feature groups to quantify each bundle's incremental contribution).
+\end{itemize}
+% NOTES: Mark all items as planned work and keep non-numeric. Position this as the roadmap after current Twitter15/16 findings.
+\end{frame}
+
+\section{Q\&A}
+\begin{frame}{Q\&A + GitHub Repo}
+\begin{itemize}
+\item Code repository: \href{https://github.com/JiahaoZhang2001/Early-diffusion-signals}{github.com/JiahaoZhang2001/Early-diffusion-signals}
+\item Questions?
+\end{itemize}
+% NOTES: Close with the repository link and invite discussion. Keep this slide minimal and readable.
+\end{frame}
+
+\end{document}

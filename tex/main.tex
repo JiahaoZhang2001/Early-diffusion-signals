@@ -1,0 +1,65 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+% \doublespacing
+\onehalfspacing
+\usepackage{graphicx} % Required for inserting images
+\usepackage[backend=biber,style=apa,natbib=true]{biblatex} % Feel free to change the style to another one you prefer
+\addbibresource{references.bib}  
+\usepackage{amsmath, amssymb, amsthm, amsfonts}
+\usepackage{booktabs}
+\usepackage{mlmodern}
+\usepackage[utf8]{inputenc}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows.meta, positioning, calc, backgrounds, fit}
+
+\usepackage{float}
+\usepackage{placeins}
+
+\usepackage{colorblind}
+\usepackage{hyperref} %% preferrably the last package called
+\hypersetup{colorlinks=true, urlcolor=blue}
+
+
+
+\title{Early Diffusion Signals for Predicting Reach and Veracity in Social Media Rumor Cascades [paper track : thesis paper]}
+\author{Jiahao Zhang}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\textbf{Overleaf (paper):} \url{https://www.overleaf.com/2132397694sjkqndvywpyd}
+\begin{abstract}
+Misinformation response faces a timing constraint: harmful cascades can scale before reliable verification is available. This study asks whether early diffusion traces contain useful predictive signal for two related tasks: eventual reach and veracity. The main analysis uses FibVID, with Twitter15/16 retained as a comparative benchmark. I study size-based early windows ($k \in \{10,20,30,45,60,90,120,180\}$) as the primary specification, since they hold observed message count fixed, and I report time-window analyses as robustness checks. Features combine residualized structural shape descriptors, Hawkes-inspired dynamic parameters, and structure--tempo interaction terms. Residualization is used to separate structural shape from early volume; after adjustment, the median absolute correlation between structural features and log early volume falls from about 0.248 to essentially zero in time windows.
+
+The main empirical result is a clear task asymmetry. On FibVID under the harmonized cascade-compatible specification, reach is strongly predictable from early diffusion: OLS reaches about $R^2=0.886$ at $k=180$, and the interaction-full specification peaks around $R^2=0.861$ at $k=120$. Veracity is much weaker. In the same FibVID analysis, the best baseline logit result reaches AUC $\approx 0.591$ at $k=180$, while richer feature bundles do not produce consistent gains over that baseline. The Twitter15/16 benchmark shows the same broad ordering, though with somewhat stronger veracity performance: the best interaction-full veracity result reaches AUC $\approx 0.657$ at $k=20$, while interaction-full reach reaches $R^2 \approx 0.719$ at $k=180$. Time-window results do not overturn these conclusions, but they are generally weaker than the size-based specification, especially for reach.
+
+The main implication is therefore not that early diffusion can classify truth reliably. Rather, early diffusion is much more informative for \emph{how far} a cascade will spread than for \emph{whether} it is false. In practical terms, the results support a staged early-warning logic: diffusion features are most defensible as a weak misinformation-risk screening signal and a much stronger tool for prioritizing likely high-impact cascades.
+\end{abstract} \hspace{10pt}
+
+\section{Introduction}
+\input{Paper_sections/Introduction}
+
+\section{Literature Review}
+\input{Paper_sections/LitReview}
+
+\section{Data and Methods}
+
+
+\input{Paper_sections/Data&Methods}
+
+\section{Results}
+\input{Paper_sections/Results}
+
+\section{Discussion}
+\input{Paper_sections/Discussion}
+
+\section{Conclusion}
+\input{Paper_sections/Conclusion}
+
+
+
+\printbibliography
+\end{document}

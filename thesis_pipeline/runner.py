@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, r2_score, roc_auc_score
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
@@ -912,4 +913,3 @@ def main(data_dir: Path, out_dir: Path) -> None:
     print("Generated outputs:")
     for p in sorted(set(created_files)):
         print(p)
-

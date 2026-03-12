@@ -1,113 +1,142 @@
 # Early Diffusion Signals for Predicting Reach and Veracity in Social Media Rumor Cascades
 
-## Abstract
-This repository evaluates whether early diffusion structure and timing in rumor conversation trees can predict two outcomes: (1) veracity (false vs. non-false) and (2) final cascade reach (log-transformed). The main pipeline uses fixed random seeds, extracts early-window features, residualizes structural features against early volume, adds dynamic and interaction terms, and evaluates multiple model families with cross-validation and permutation tests. The repository is organized for end-to-end reproducibility with a single entry command: `bash reproduce.sh`.
+This repository reproduces the final thesis analysis. The current design uses FibVID as the main dataset, keeps Twitter15/16 as a comparative benchmark, treats size-based $k$-windows as the main specification, and reports time-window and native-graph analyses as supplementary checks.
 
-## Main Findings (from current pipeline outputs)
-- In size-based windows, veracity peaks at **AUC = 0.657 (k=20)** and reach peaks at **R² = 0.719 (k=180)** (`thesis_outputs/tables/results_k_primary.csv`, `thesis_outputs/figures/F1K_k_veracity_primary.png`, `thesis_outputs/figures/F2K_k_reach_primary.png`).
-- Adding structure + dynamics improves peak performance over baseline: veracity **0.650 -> 0.657 AUC**, reach **0.612 -> 0.719 R²** (`thesis_outputs/tables/results_k_primary.csv`, `thesis_outputs/figures/A1K_k_veracity_baseline_full.png`, `thesis_outputs/figures/A2K_k_reach_baseline_full.png`).
-- Permutation at `k=60` confirms non-random signal: veracity **0.640 vs 0.499 null mean (AUC)** and reach **0.254 vs -0.302 null mean (R²)** (`thesis_outputs/tables/permutation_test_k60.csv`, `thesis_outputs/figures/F5_permutation_test_signal.png`).
-- Model-family comparison shows stronger gains for reach than veracity; best overall is **RF-reg, R² = 0.773 (k=180)** (`thesis_outputs/tables/model_family_comparison_k_full.csv`, `thesis_outputs/figures/F3_model_family_full_only.png`).
+## What the repository reproduces
 
-## Key Figures
-### Figure 1. Veracity classification performance in size-based windows
-This plot shows how veracity AUC changes across early size windows and where predictive performance is maximized.
-![Figure 1](README_files/F1K_k_veracity_primary.png)
+The final analysis has four parts.
 
-### Figure 2. Reach prediction performance in size-based windows
-This plot shows the same window trade-off for reach prediction (R²), highlighting that larger windows improve fit.
-![Figure 2](README_files/F2K_k_reach_primary.png)
+1. Twitter15/16 benchmark pipeline under the original rumor-tree format.
+2. FibVID main analysis under a harmonized cascade-compatible representation.
+3. FibVID time-window robustness analysis.
+4. FibVID native graph analysis used as a supplementary veracity check.
 
-### Figure 3. Baseline vs full features for veracity
-This comparison isolates the added value of structure and dynamic features beyond the early-volume baseline.
-![Figure 3](README_files/A1K_k_veracity_baseline_full.png)
+The main paper conclusion from this pipeline is a task asymmetry: early diffusion is much more informative for eventual reach than for veracity. In the FibVID main analysis, reach is strong under the harmonized $k$-window design, while veracity remains modest and is better interpreted as weak risk screening rather than strong classification.
 
-### Figure 4. Baseline vs full features for reach
-This figure shows that richer feature sets produce larger and more stable gains for reach prediction.
-![Figure 4](README_files/A2K_k_reach_baseline_full.png)
+## Comparative snapshot
 
-### Figure 5. Model-family comparison (full feature set)
-This figure compares linear and tree-based model classes under the same early-window design.
-![Figure 5](README_files/F3_model_family_full_only.png)
+The repository still keeps a small visual comparison between the older Twitter15/16 benchmark outputs and the revised FibVID-centered analysis.
 
-### Figure 6. Incremental gain decomposition by model
-This plot decomposes where gains are concentrated by model family and window, clarifying heterogeneous improvements.
-![Figure 6](README_files/F4_delta_gain_by_model.png)
+- In the original Twitter15/16 benchmark, veracity peaks around AUC `0.657`, while reach peaks around `R^2 = 0.719`.
+- In the revised FibVID main analysis, veracity remains modest, but reach becomes even stronger under the harmonized $k$-window specification.
 
-### Figure 7. Permutation-test signal check
-Observed scores are contrasted with null distributions, providing a direct robustness check against random-label artifacts.
-![Figure 7](README_files/F5_permutation_test_signal.png)
+### Veracity comparison
 
-## Requirements
-- Python tested: **3.12.2**
-- Install dependencies:
+Left: original Twitter15/16 benchmark output. Right: revised FibVID main analysis.
+
+<p align="center">
+  <img src="README_files/F1K_k_veracity_primary.png" alt="Twitter15/16 veracity benchmark" width="46%" />
+  <img src="README_files/F1K_k_veracity_primary_fibvid.png" alt="FibVID veracity main analysis" width="46%" />
+</p>
+
+### Reach comparison
+
+Left: original Twitter15/16 benchmark output. Right: revised FibVID main analysis.
+
+<p align="center">
+  <img src="README_files/F2K_k_reach_primary.png" alt="Twitter15/16 reach benchmark" width="46%" />
+  <img src="README_files/F2K_k_reach_primary_fibvid.png" alt="FibVID reach main analysis" width="46%" />
+</p>
+
+## Main output locations
+
+Running the full reproduction writes to two places.
+
+- `thesis_outputs/`
+  Twitter15/16 benchmark outputs from the original tree-based pipeline.
+- `new data/`
+  FibVID main outputs, time-window outputs, native-graph outputs, and cross-result summaries.
+
+Important generated files include:
+
+- `thesis_outputs/tables/results_k_primary.csv`
+- `thesis_outputs/tables/permutation_test_k60.csv`
+- `new data/tables/results_k_primary.csv`
+- `new data/tables/results_timewin_primary_fibvid.csv`
+- `new data/fibvid_graph_native/graph_veracity_results.csv`
+- `new data/full_results_comparison.md`
+
+## Data requirements
+
+See `Data/README.md` for the expected folder layout.
+
+The current full analysis expects both:
+
+- Twitter15/16 tree files under `Data/rumor_detection_acl2017/`
+- FibVID files under `merry555-FibVID-14b95c3/`
+
+The FibVID scripts expect the following released tables:
+
+- `merry555-FibVID-14b95c3/claim_propagation/claim_propagation.csv`
+- `merry555-FibVID-14b95c3/news_claim/news_claim.csv`
+
+## Environment
+
+Python tested: `3.12.2`
+
+Install dependencies:
+
 ```bash
-pip install -r requirements.txt
-```
-
-`xgboost` is optional. The pipeline is designed to run without it (fallback models are used automatically).
-
-## Data Setup
-See `Data/README.md` for exact required folders/files.
-
-Default expected dataset location:
-- `Data/rumor_detection_acl2017/twitter15/...`
-- `Data/rumor_detection_acl2017/twitter16/...`
-
-## Reproduce (clean machine)
-Expected data paths (place files exactly here before running):
-- `Data/rumor_detection_acl2017/twitter15/label.txt` and `Data/rumor_detection_acl2017/twitter15/tree/*.txt`
-- `Data/rumor_detection_acl2017/twitter16/label.txt` and `Data/rumor_detection_acl2017/twitter16/tree/*.txt`
-- See `Data/README.md` for the full folder layout.
-
-Minimal run commands (copy/paste):
-```bash
-python3 --version
-pip install -r requirements.txt
-bash reproduce.sh
-```
-
-Full environment setup:
-```bash
-git clone https://github.com/JiahaoZhang2001/Early-diffusion-signals.git
-cd Early-diffusion-signals
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+`xgboost` is optional. The code falls back automatically when it is unavailable.
+
+## Reproduce the final analysis
+
+Use the top-level reproduction script:
+
+```bash
 bash reproduce.sh
 ```
 
-This writes outputs to:
-- `thesis_outputs/tables/`
-- `thesis_outputs/figures/`
-- `thesis_outputs/logs/`
-All reported tables and figures can be regenerated by running `bash reproduce.sh`.
+This script runs, in order:
 
-## Expected Outputs
-- `thesis_outputs/tables/results_k_primary.csv`
-- `thesis_outputs/tables/model_family_comparison_k_full.csv`
-- `thesis_outputs/tables/k_primary_paired_ttests.csv`
-- `thesis_outputs/tables/permutation_test_k60.csv`
-- `thesis_outputs/tables/coverage_k.csv`
-- `thesis_outputs/figures/F1K_k_veracity_primary.png`
-- `thesis_outputs/figures/F2K_k_reach_primary.png`
-- `thesis_outputs/figures/F3_model_family_full_only.png`
-- `thesis_outputs/figures/F5_permutation_test_signal.png`
-- `thesis_outputs/logs/run.log`
+1. the Twitter15/16 benchmark pipeline,
+2. the FibVID harmonized main pipeline,
+3. the FibVID time-window comparison,
+4. the FibVID native graph analysis.
 
-## Repository Layout
+If you only want one component, the direct entry points are:
+
+```bash
+python3 main.py --data_dir Data --out_dir thesis_outputs
+python3 scripts/run_fibvid_main_pipeline.py
+python3 scripts/run_fibvid_timewin_compare.py
+python3 scripts/run_fibvid_graph_native.py
+```
+
+## Repository layout
+
 ```text
 .
-├── CITATION.cff
 ├── README.md
 ├── requirements.txt
 ├── reproduce.sh
 ├── main.py
+├── scripts/
+│   ├── run_fibvid_main_pipeline.py
+│   ├── run_fibvid_timewin_compare.py
+│   └── run_fibvid_graph_native.py
+├── thesis_pipeline/
 ├── Data/
 │   ├── README.md
 │   └── rumor_detection_acl2017/
-└── thesis_outputs/            # generated results (tables/figures/logs)
+├── thesis_outputs/    # generated Twitter benchmark outputs
+└── new data/          # generated FibVID outputs and comparison summaries
 ```
 
+## Notes on scope
+
+This repository is meant to reproduce the final implemented analysis, not every exploratory design considered during drafting. In the final paper:
+
+- FibVID is the main empirical setting.
+- Twitter15/16 remain as a comparative benchmark.
+- Time windows are a robustness specification.
+- The native graph analysis is supplementary and is mainly used to check veracity sensitivity to representation.
+
 ## Citation
-Please cite this project using metadata in `CITATION.cff`.
+
+Please cite this project using `CITATION.cff`.

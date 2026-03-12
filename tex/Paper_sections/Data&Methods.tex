@@ -1,0 +1,228 @@
+
+\subsection{Datasets and Their Roles}
+This thesis asks whether early diffusion signals help predict two outcomes: final reach and veracity. The main dataset is FibVID, a more recent claim-level misinformation dataset with timestamped propagation records. Since the empirical design focuses on early diffusion structure rather than on one specific released file format, I use FibVID as the primary dataset and construct representations that support the same windowed prediction logic used throughout the thesis. Figure~\ref{fig:early_window_schematic} illustrates the early-observation setup, and Table~\ref{tab:dataset_overview} summarizes the role of each dataset in the final design.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{Paper_sections/figures/early_window_schematic_v2.pdf}
+  \caption{Conceptual illustration of early-observation windows on a toy propagation tree (time-based). Each circle represents one post (source, reply, or reshare), and directed edges represent parent-to-child propagation links. Dashed boxes indicate what is observable at different cutoffs ($T \le 30$, $T \le 60$, and $T \le 180$ minutes); nodes outside a given cutoff are future/unobserved at that stage.}
+  \label{fig:early_window_schematic}
+\end{figure}
+
+FibVID and Twitter15/16 play different roles. FibVID provides the main empirical evidence and is used for the primary analyses. Twitter15/16 \citep{liu2015real,ma_detecting_2016,ma2017detect} remain as a comparative benchmark and structural reference point because they provide the original single-root rumor-tree setting in which the early-diffusion pipeline was first developed. I therefore do not use Twitter15/16 as the sole main dataset in the final version, but I keep them as the cleanest benchmark for interpreting the FibVID results.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Overview of the two datasets used in the final thesis design. The unit of analysis is a claim-level propagation cascade (FibVID) or a released rumor tree (Twitter15/16).}
+  \label{tab:dataset_overview}
+  \resizebox{\linewidth}{!}{%
+  \begin{tabular}{lllllll}
+    \toprule
+    Dataset & Role & Platform & Unit & Label set used here & $n$ units & Timestamps? \\
+    \midrule
+    FibVID & main analysis & Twitter & claim-level propagation records & false, true & 295 & Y \\
+    Twitter15/16 benchmark & comparative benchmark & Twitter & released rumor tree & false, true, non-rumour, unverified & 2308 & Y \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table}
+
+\subsection{Data Collection, Preprocessing, and Missingness}
+Both datasets are processed under the same early-window logic, but they do not begin in the same raw format. Twitter15/16 are released as single-root rumor trees, so the tree structure can be used directly after duplicate-node cleanup, timestamp normalization, and parent--child validity checks. FibVID is released instead as claim-level propagation records with tweet identifiers, parent identifiers, and timestamps. For FibVID, the main preprocessing task is therefore not only cleaning but also building an analysis-ready representation.
+
+For FibVID, I use two representations. The main one is a \emph{cascade-compatible harmonized representation}, built to preserve comparability with the original cascade-based pipeline. In this representation, each claim (\texttt{claim\_number}) is treated as the analysis unit. A root is assigned using the earliest available origin post within the claim, with \texttt{parent\_id=0} treated as the first anchor when available. Valid parent--child relations are retained when they are temporally coherent and remain within the same claim. Posts with missing parents, parents outside the claim, or parent timestamps that follow the child are attached to the root so that a single analyzable cascade can be defined. This does not mean that FibVID is natively identical to Twitter15/16. Rather, it places FibVID in a common analytical format so that early windows, structural features, and full-cascade outcomes can be defined in the same way across datasets.
+
+I also retain a native graph representation of FibVID for specification checks. In that version, I again use \texttt{claim\_number} as the analysis unit, but I keep valid parent--child relations directly at the claim level without forcing a single-root tree. The resulting propagation graph is summarized using component counts, largest-component share, degree and parent-reuse concentration, and related timing features. In the final design, I use this native graph specification only as a supplementary check for veracity. The distinction is straightforward: the harmonized representation prioritizes comparability and full-cascade interpretation, while the native graph representation stays closer to the claim-level topology observed in FibVID.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Representation choices for FibVID in the final design.}
+  \label{tab:representation_overview}
+  \begin{tabular}{p{3.1cm}p{4.2cm}p{3.9cm}p{3.2cm}}
+    \toprule
+    Representation & Construction logic & Main feature emphasis & Role in thesis \\
+    \midrule
+    Harmonized cascade-compatible representation & Claim-level records are converted into a single analyzable cascade using the earliest valid origin as root and temporally coherent parent--child links & Early cascade shape, branching, dynamics, full-cascade outcomes & Main specification, especially for reach \\
+    Native graph representation & Claim-level parent--child links are kept without forcing a single-root tree & Components, degree concentration, parent reuse, timing dispersion & Supplementary veracity check only \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Before feature construction, I apply a consistent set of quality-control steps to both datasets. First, I standardize timestamps to a common time zone and enforce temporal consistency (e.g., children cannot precede their parent in time). Second, I de-duplicate repeated node tuples and drop records that cannot be placed on a coherent timeline. When the released structure contains minor inconsistencies (e.g., ties or small timestamp inversions), I resolve ordering for the purpose of defining $W_{\Delta}(c)$ and $W_k(c)$ by using chronological order with deterministic tie-breaking \citep{choi_dynamicgcn_2021}.
+
+\paragraph{Descriptive measures.}
+Tables~\ref{tab:main_by_label} and \ref{tab:main_overall} summarize basic properties of the main dataset under the harmonized cascade-compatible representation, where a \emph{node} is a post in the claim-level cascade, an \emph{edge} is a directed parent$\rightarrow$child relation used in the harmonized representation, \emph{duration} is the time difference (in minutes) between the root timestamp and the latest observed node timestamp within the same claim, \emph{max depth} is the longest root-to-node path length, and \emph{max width} is the maximum number of nodes appearing at the same depth level.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Main dataset (FibVID) descriptive statistics by veracity label under the harmonized cascade-compatible representation. Entries are medians computed after preprocessing and representation building.}
+  \label{tab:main_by_label}
+  \resizebox{\linewidth}{!}{%
+  \begin{tabular}{lrrrrrr}
+    \toprule
+    Label & $n$ & Median nodes & Median edges & Median duration (min) & Median max depth & Median max width \\
+    \midrule
+    false & 222 & 230 & 229 & 71491.31 & 3 & 160.5 \\
+    true  &  73 & 147 & 146 & 23108.62 & 2 &  97.0 \\
+    \bottomrule
+  \end{tabular}%
+  }
+
+  \vspace{0.3em}
+  {\footnotesize \textit{Note:} FibVID labels are mapped to a binary false/true specification for the main veracity analysis. Node/edge counts are computed after harmonization into a cascade-compatible representation; the assigned root post is used as the structural anchor.}
+\end{table}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Overall distributional summaries for the main dataset (FibVID) under the harmonized cascade-compatible representation. Reported values are the 25th percentile (p25), median, and 75th percentile (p75) across cascades.}
+  \label{tab:main_overall}
+  \begin{tabular}{lrrr}
+    \toprule
+    Metric & p25 & Median & p75 \\
+    \midrule
+    nodes          & 16.50 & 216.00 & 820.50 \\
+    edges          & 15.50 & 215.00 & 819.50 \\
+    duration (min) & 3020.28 & 63918.73 & 231839.13 \\
+    max depth      & 1.00 & 3.00 & 4.00 \\
+    max width      & 15.00 & 142.00 & 520.00 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:main_overall} reports overall distribution summaries for the main dataset. Table~\ref{tab:early_usability} reports early-window usable counts for the two datasets used in the final design. Missingness arises mainly from incomplete timestamp fields, claim units with too little early activity, and differences in how each dataset stores propagation structure. My default strategy is listwise exclusion only for the specific feature or window that requires the missing information. Cascades with insufficient activity for one window are retained for other windows but excluded from analyses at that specific cutoff. To avoid label leakage, all preprocessing decisions are defined and applied within the training data and then carried forward unchanged to validation and benchmark datasets.
+
+
+\begin{table}[htbp]
+  \centering
+  \caption{Early-window usability across the two datasets used in the final thesis design. ``Usable'' indicates that a cascade contains sufficient information to construct the specified early window under the preprocessing rules described in this section.}
+  \label{tab:early_usability}
+  \begin{tabular}{llrrr}
+    \toprule
+    Dataset & Window & Usable count & $N$ & Ratio \\
+    \midrule
+    Twitter15/16 benchmark & $k=20$ & 2308 & 2308 & 1.000 \\
+    Twitter15/16 benchmark & $k=60$ & 2308 & 2308 & 1.000 \\
+    Twitter15/16 benchmark & $T=60$ & 2278 & 2308 & 0.987 \\
+    Twitter15/16 benchmark & $T=180$ & 2292 & 2308 & 0.993 \\
+    \addlinespace
+    FibVID (harmonized main representation) & $k=20$ & 295 & 295 & 1.000 \\
+    FibVID (harmonized main representation) & $k=60$ & 295 & 295 & 1.000 \\
+    FibVID (harmonized main representation) & $T=60$ & 295 & 295 & 1.000 \\
+    FibVID (harmonized main representation) & $T=180$ & 295 & 295 & 1.000 \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.3em}
+  {\footnotesize \textit{Design implication:} Both datasets support the main size-based windows used in the thesis, while time-based windows are retained as a robustness specification. The key cross-dataset issue is therefore not window feasibility but structural representation.}
+\end{table}
+
+\subsection{Problem setup and models}
+I use an early observation window $w$, defined in two ways: (1) by elapsed time since the source post, or (2) by the first $k$ messages in time order. For each cascade, I extract a feature vector $\mathbf{x}_w \in \mathbb{R}^d$ from the partially observed diffusion tree in window $w$. This setup follows prior early-cascade formulations that predict outcomes before full trajectories are visible \citep{szabo_predicting_2010,cheng_can_2014}. I first define the prediction targets, then give the regression/classification forms, and finally note a Hawkes-style view of early arrival intensity.
+
+There are two prediction targets:
+\begin{align*}
+\textbf{Reach/outcome: } & y^{\mathrm{reach}} \in \mathbb{R} \quad \text{(e.g., final size or final depth)},\\
+\textbf{Veracity: } & y^{\mathrm{ver}} \in \{0,1\} \quad \text{(false vs.\ true in the main specification)}.
+\end{align*}
+
+For reach prediction, I fit a regression model (often using a stabilized target like $\log(1+y^{\mathrm{reach}})$):
+\[
+\widehat{y}^{\mathrm{reach}} = \beta_0 + \boldsymbol{\beta}^\top \mathbf{x}_w.
+\]
+
+For veracity prediction, I use a probabilistic classifier:
+\[
+\Pr\bigl(y^{\mathrm{ver}}=c\mid \mathbf{x}_w\bigr)
+= \frac{\exp\bigl(\mathbf{w}_c^\top \mathbf{x}_w + b_c\bigr)}{\sum_{c'=1}^C \exp\bigl(\mathbf{w}_{c'}^\top \mathbf{x}_w + b_{c'}\bigr)}.
+\]
+
+To give a simple generative view of early growth, I also consider a self-exciting point-process model (Hawkes-type \parencite{hawkes1971spectra} intensity) for reply/retweet arrivals \parencite{crane2008robust}:
+\[
+\lambda(t) = \mu + \sum_{t_i < t} \alpha\,\exp\bigl(-\omega (t-t_i)\bigr),
+\]
+where $\mu$ is the baseline rate and past events at times $\{t_i\}$ temporarily increase the intensity with an exponential decay \parencite{rizoiu2017expecting, linderman2014discovering}.
+In the empirical pipeline, I do not estimate a separate Hawkes forecasting model. Instead, I fit simple window-level Hawkes-style summaries from early arrival times and include the resulting parameters (baseline rate, excitation strength, and branching-ratio proxy) in the dynamic feature bundle used by the downstream prediction models.
+
+
+\subsection{Early Diffusion Operationalization and Feature Construction}
+
+This section asks a direct question: can signals observed at the very beginning of a cascade predict (i) its eventual diffusion and (ii) its eventual credibility outcome? I study two prediction targets at the cascade level: final spread (e.g., terminal cascade size) and whether the claim is ultimately labeled misinformation (e.g., ``false''). In the main specification, each claim-level cascade is one observational unit, using either the harmonized cascade representation or, in supplementary checks, the native propagation graph.
+
+Let cascade \(c\) have source-post time \(t_0\), node set \(V_c\), and node timestamp function \(t(v)\). I define the early observation window in two complementary ways. In the time-based specification, for horizon \(\Delta\),
+\[
+W_{\Delta}(c)=\{v\in V_c:\ t(v)\le t_0+\Delta\}.
+\]
+In the size-based specification, let \(v_{(1)},v_{(2)},\ldots\) be nodes sorted by time so that
+\[
+t\!\bigl(v_{(1)}\bigr)\le t\!\bigl(v_{(2)}\bigr)\le \cdots,
+\]
+and define
+\[
+W_{k}(c)=\{v_{(1)},\ldots,v_{(k)}\}.
+\]
+Using both windows helps separate information from early \emph{speed} (how fast activity accumulates) versus early \emph{shape} (how activity is organized in the partial cascade).
+Two cascades can have similar early counts but different shape if one is shallow and broadcast-like while the other is deeper and multi-step, a distinction emphasized in prior structural diffusion work \citep{goel_structural_2016}.
+
+From each early window \(W(c)\in\{W_{\Delta}(c),W_k(c)\}\), I build a common feature set for both prediction tasks. Structural features include early message count \(|W(c)|\), number of distinct users in-window, maximum depth, maximum width, and the number of direct replies to the source in the induced partial cascade. I summarize branching as
+\[
+b(c)=\frac{1}{|V_{\text{nonleaf}}(W)|}\sum_{v\in V_{\text{nonleaf}}(W)}\deg^{+}(v),
+\]
+where \(V_{\text{nonleaf}}(W)\) is the set of non-leaf nodes in the partial cascade and \(\deg^{+}(v)\) is out-degree. When feasible, I also include a structural-virality proxy based on average pairwise shortest-path distance:
+\[
+\nu\!\bigl(T_c[W]\bigr)=\frac{1}{n(n-1)}\sum_{i\neq j} d(i,j),
+\]
+where \(T_c[W]\) is the induced partial tree on \(W(c)\), \(n\) is its node count, and \(d(i,j)\) is shortest-path distance.
+
+Temporal features capture early pace. Let \(m=|W(c)|\), and let in-window timestamps be ordered as \(t_{(1)}\le\cdots\le t_{(m)}\). I compute: (a) threshold times to reach fixed counts (e.g., 5th/10th/20th message), (b) mean interarrival time
+\[
+\overline{\Delta t}(c)=\frac{1}{m-1}\sum_{i=2}^{m}\bigl(t_{(i)}-t_{(i-1)}\bigr),
+\]
+and (c) for time-based windows, a growth-rate measure
+\[
+g_{\Delta}(c)=\frac{m}{\Delta},
+\]
+interpreted as messages per hour.
+
+All feature definitions are fixed before model fitting via preregistration. Any dataset-specific deviations (for example, dropping a feature because of missingness) are logged and reported, so the operationalization remains explicit and reproducible.
+
+\paragraph{Feature bundles (used in Results).}
+To align methods and results, I evaluate four feature bundles in a fixed ablation sequence. \textit{Baseline} is tempo-only (early volume and timing features). \textit{Structure-only} uses residualized structural shape features only, with no tempo, dynamics, or interaction terms. \textit{Full} combines baseline with residualized structure and dynamics, and \textit{interaction-full} adds structure--tempo interactions on top of full. This setup isolates incremental signal in stages and reduces the risk of interpreting raw volume effects as structure effects.
+
+\subsection{Predictive Tasks, Training Strategy, and Evaluation}
+I evaluate early-diffusion signal in a windowed prediction setting that mirrors an early-warning use case: at a fixed observation window, only features computed from the partially observed cascade are available to the model, and outcomes are defined using the full cascade and/or downstream veracity labels. Across both tasks, I use the same feature-bundle progression (baseline, structure-only, full, interaction-full), the same model families (linear/logit, random forest, XGBoost), and window-aligned splits. This keeps differences in performance tied to features/models rather than mismatched setup choices.
+
+\paragraph{Task 1: Veracity classification.}
+The first task is cascade-level veracity prediction. In the main FibVID analysis, the dependent variable is a binary false/true label, and the predictors are the structural and temporal features computed within the early window. In the Twitter15/16 benchmark, I retain the original annotation granularity when needed, but the main cross-dataset comparison focuses on the binary misinformation-risk specification because it is the more comparable setup and better matches a screening objective.
+
+\emph{Training and splits.} The main specification trains and evaluates models on FibVID. Because FibVID is organized at the claim level rather than as a released event benchmark, the default protocol is stratified cross-validation over claims with fixed random seeds and common folds across feature bundles and model classes. Twitter15/16 are then used as a comparative benchmark under their native tree structure.
+
+\emph{Model classes and justification.} I evaluate a small hierarchy of models to balance interpretability and predictive capacity. As a transparent baseline, I fit generalized linear logit models, using binary logistic regression in the main FibVID specification and the corresponding comparable specification in the Twitter15/16 benchmark (hereafter \textit{logit}). These models provide directly interpretable coefficients and make the contribution of each early diffusion feature explicit. Because early diffusion patterns may exhibit non-linearities and feature interactions (e.g., depth and growth-rate jointly shaping outcomes), I additionally evaluate tree-based methods that can capture non-linear decision boundaries, including random forests and gradient-boosted trees (XGBoost; \citealp{chen_xgboost_2016}). This set supports both hypothesis-driven interpretation (via logit coefficients) and performance-oriented modeling (via ensembles), while keeping the comparison tractable.
+
+\emph{Estimation details.} Continuous predictors are standardized for linear models. Hyperparameters are selected on the validation split (or within the inner loop of cross-validation) using the following pre-registered search space:
+\begin{itemize}
+  \item \textbf{Logit (logistic / multinomial logistic regression):} $C\in\{0.01,0.1,1,10\}$ with $\ell_2$ regularization.
+  \item \textbf{Random forest:} $n\_\text{estimators}\in\{200,500\}$, $\text{max\_depth}\in\{\text{None},10,20\}$, $\text{min\_samples\_leaf}\in\{1,5\}$.
+  \item \textbf{Gradient-boosted trees (XGBoost):} $\eta\in\{0.05,0.1\}$, $\text{max\_depth}\in\{3,6\}$, $n\_\text{estimators}\in\{200,500\}$, $\text{subsample}\in\{0.8,1.0\}$, $\text{colsample\_bytree}\in\{0.8,1.0\}$, and $\lambda\in\{1,10\}$.
+\end{itemize}
+For class imbalance, I use class-weighted loss functions as the default, and I report sensitivity analyses with alternative approaches (e.g., resampling) where needed. In addition to discrimination metrics, I assess calibration (e.g., reliability curves and Brier score) for the binary specification, since an early-warning application requires probabilistic outputs that are meaningfully interpretable.
+
+\emph{Evaluation.} For the main binary task, I report ROC-AUC, PR-AUC (when the positive class is rare), and F1 at an operating point chosen on the validation data. Where the Twitter15/16 benchmark is reported in a richer label setup, I additionally report the corresponding multi-class metrics. To quantify robustness, I repeat evaluation across multiple early windows (time-based and size-based) and test whether performance improvements beyond an early-volume baseline persist. In Results, gaps baseline$\rightarrow$structure-only and structure-only$\rightarrow$full/interaction-full are interpreted as incremental value from structure, then from dynamics/interactions at a fixed window.
+
+\paragraph{Task 2: Diffusion-outcome prediction.}
+The second task predicts cascade reach outcomes from early diffusion observations. The primary dependent variable is final cascade size; in robustness analyses I additionally consider maximum depth (and related size proxies where available). Because cascade sizes are heavy-tailed, the main regression target is $y=\log(1+\text{final size})$, which reduces sensitivity to extreme outliers and makes linear-model residual behavior more stable \citep{szabo_predicting_2010,cheng_can_2014}.
+
+\emph{Training and splits.} Task~2 uses the same claim-level splitting protocol as Task~1 for FibVID and the same comparative-benchmark logic for Twitter15/16.
+
+\emph{Model classes and justification.} I evaluate a small hierarchy of regressors to balance interpretability and predictive accuracy. As a transparent baseline, I fit ordinary least squares (OLS) on $y$, which provides directly interpretable coefficients for marginal associations between early diffusion features and later reach. In this setting, OLS serves as a diagnostic model: it clarifies which early structural/temporal measures are most strongly related to eventual reach (on the log scale) and provides a simple benchmark for assessing whether non-linear models add meaningful incremental predictive value. To allow for non-linear effects and interactions (e.g., diminishing returns to early volume and interactions between early breadth and early speed), I additionally estimate ensemble regressors (random forests and gradient-boosted trees/XGBoost). This simple-to-flexible progression is consistent with prior early diffusion forecasting work under partial observation \citep{szabo_predicting_2010,cheng_can_2014}. This parallel structure matches Task~1: linear regression supports coefficient-based interpretation, while tree-based models capture flexible functional form without hand-specifying interactions.
+
+\emph{Estimation details.} Continuous predictors are standardized for linear models. Hyperparameters for ensemble regressors are tuned on the validation split (or within the inner loop of cross-validation) using the same search ranges reported for Task~1, adapted for regression objectives. For OLS, I use the transformed target $y$ throughout and report results back on the transformed scale.
+
+\emph{Evaluation.} I report RMSE and MAE on the transformed scale as primary metrics, supplemented by out-of-sample $R^2$ and rank-based correlation (Spearman) to capture whether models preserve the ordering of cascade sizes. As in Task~1, robustness is assessed by repeating the full evaluation under multiple early windows (time-based and size-based) and by testing whether gains beyond an early-volume baseline persist across window definitions.
+
+
+
+\paragraph{Out-of-sample and robustness checks.}
+To assess portability across datasets and representations, I compare the FibVID results against Twitter15/16 under the original native rumor-tree benchmark. I also report ablations that separate early volume from higher-order structural and temporal features, compare time-based and size-based early windows, and examine how results change when FibVID is represented as a harmonized cascade versus a native propagation graph. In the final design, robustness is therefore treated mainly as a question of representation and task sensitivity rather than of adding loosely matched external datasets.
+
+\paragraph{Implementation and reproducibility.}
+All feature construction and modeling are implemented in Python using standard scientific-computing libraries (e.g., pandas for data handling \citealp{mckinney_pandas_2010}, NetworkX for graph operations \citealp{hagberg_networkx_2008}, scikit-learn for baseline models and evaluation utilities \citealp{pedregosa_scikit_2011}, and XGBoost for gradient boosting \citealp{chen_xgboost_2016}). Wherever preprocessing requires learned parameters (e.g., standardization or imputation), those parameters are fit on the training split only; the same fitted transforms are then applied to validation/test and benchmark datasets to avoid leakage. Unless noted otherwise, all main results use size-based $k$-windows; time-window results ($T\in\{30,60,180\}$) are reported as robustness checks.

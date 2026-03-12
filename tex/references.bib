@@ -1,0 +1,386 @@
+@inproceedings{bakshy_everyones_2011,
+  title     = {Everyone's an Influencer: Quantifying Influence on Twitter},
+  author    = {Bakshy, Eytan and Hofman, Jake M. and Mason, Winter A. and Watts, Duncan J.},
+  booktitle = {Proceedings of the Fourth ACM International Conference on Web Search and Data Mining (WSDM)},
+  year      = {2011},
+  pages     = {65--74},
+  doi       = {10.1145/1935826.1935845},
+  url       = {https://dl.acm.org/doi/10.1145/1935826.1935845},
+  %annote    = {Bakshy et al. (2011) study large-scale Twitter diffusion and ask how much influence comes from ``who shares'' versus ``what is shared.'' They find that users with many followers and a history of influence are more likely to generate large cascades, but at the same time it is still hard to reliably predict which specific user or URL will go viral. For my thesis, this is useful because it shows why early diffusion signals may be informative even when individual-level prediction is noisy. It also supports my choice to focus on early cascade behavior and structure rather than trying to identify a small set of ``super spreaders.'' The paper is not about misinformation, but it provides a strong baseline for how diffusion and influence are measured on Twitter.}
+}
+
+@article{centola_spread_2010,
+  title   = {The Spread of Behavior in an Online Social Network Experiment},
+  author  = {Centola, Damon},
+  journal = {Science},
+  year    = {2010},
+  volume  = {329},
+  number  = {5996},
+  pages   = {1194--1197},
+  doi     = {10.1126/science.1185231},
+  url     = {https://www.science.org/doi/10.1126/science.1185231},
+  %annote  = {Centola (2010) runs a randomized online network experiment to test how network structure affects diffusion when adoption requires social reinforcement. He shows that behavior spreads more effectively in clustered networks, consistent with ``complex contagion,'' where multiple exposures matter. This gives me a clean theoretical motivation for why diffusion structure (not just content) can carry meaningful signal, especially when information is socially consequential or contested. Although the paper is about health-behavior adoption rather than misinformation, the core mechanism---reinforcement and local structure---helps justify why early diffusion patterns might predict later outcomes. I mainly use it as conceptual grounding rather than as direct evidence about misinformation specifically.}
+}
+
+@inproceedings{cheng_can_2014,
+  title     = {Can Cascades Be Predicted?},
+  author    = {Cheng, Justin and Adamic, Lada and Dow, P. Alex and Kleinberg, Jon Michael and Leskovec, Jure},
+  booktitle = {Proceedings of the 23rd International Conference on World Wide Web (WWW)},
+  year      = {2014},
+  pages     = {925--936},
+  doi       = {10.1145/2566486.2567997},
+  url       = {https://dl.acm.org/doi/10.1145/2566486.2567997},
+  %annote    = {Cheng et al. (2014) ask whether we can predict cascade growth using only early information, and they formalize a realistic early-prediction setup on large social media data. Their results emphasize that forecasting which cascades become very large is intrinsically difficult, even with rich features, and performance improves only modestly. For my thesis, this paper is still very valuable because it provides a clear evaluation framework: define an early observation window, extract early signals, and test predictive performance in a disciplined way. It also motivates why my target should not be ``perfectly predicting final size,'' but rather using early diffusion to make useful early warning judgments. The paper is not misinformation-focused, so my work adapts the early prediction logic to veracity-aware outcomes and warning needs.}
+}
+
+@article{del_vicario_spreading_2016,
+  title   = {The Spreading of Misinformation Online},
+  author  = {Del Vicario, Michela and Bessi, Alessandro and Zollo, Fabiana and Petroni, Fabio and Scala, Antonio and Caldarelli, Guido and Stanley, H. Eugene and Quattrociocchi, Walter},
+  journal = {Proceedings of the National Academy of Sciences},
+  year    = {2016},
+  volume  = {113},
+  number  = {3},
+  pages   = {554--559},
+  doi     = {10.1073/pnas.1517441113},
+  url     = {https://pnas.org/doi/full/10.1073/pnas.1517441113},
+  %annote  = {Del Vicario et al. (2016) study how misinformation spreads on Facebook, focusing on polarization, selective exposure, and the formation of echo chambers. They show that users cluster into relatively homogeneous communities and that diffusion dynamics differ across narratives, with homophily and polarization shaping cascade behavior. This matters for my thesis because it suggests early diffusion structure may reflect community constraints (for example, whether a cascade stays inside one group or crosses groups). It also provides a mechanism-level explanation for why some cascades grow in a concentrated way instead of spreading broadly. A limitation is that platform context and accessible network signals can vary, so my project still needs to test whether early diffusion-tree features generalize well in my datasets.}
+}
+
+@article{friggeri_rumor_2014,
+  title   = {Rumor Cascades},
+  author  = {Friggeri, Adrien and Adamic, Lada and Eckles, Dean and Cheng, Justin},
+  journal = {Proceedings of the International AAAI Conference on Web and Social Media (ICWSM)},
+  year    = {2014},
+  volume  = {8},
+  number  = {1},
+  pages   = {101--110},
+  doi     = {10.1609/icwsm.v8i1.14559},
+  url     = {https://ojs.aaai.org/index.php/ICWSM/article/view/14559},
+  %annote  = {Friggeri et al. (2014) analyze rumor cascades on Facebook and examine how rumor diffusion evolves and how fact-checking signals (e.g., links to Snopes) appear during spread. They find that many rumor cascades are small, but some can keep propagating even after receiving many correction-related comments, which highlights the limits of late interventions. For my thesis, this paper supports the idea that temporal patterns matter and that correction often arrives after substantial diffusion has already happened. It also motivates why early-stage detection is practically important: waiting for full cascade information may be too late. The paper does not focus on early-stage structural prediction in a systematic way, which is where my project tries to push further.}
+}
+
+@article{goel_structural_2016,
+  title   = {The Structural Virality of Online Diffusion},
+  author  = {Goel, Sharad and Anderson, Ashton and Hofman, Jake and Watts, Duncan J.},
+  journal = {Management Science},
+  year    = {2016},
+  volume  = {62},
+  number  = {1},
+  pages   = {180--196},
+  doi     = {10.1287/mnsc.2015.2158},
+  url     = {https://pubsonline.informs.org/doi/10.1287/mnsc.2015.2158},
+  %annote  = {Goel et al. (2016) introduce ``structural virality'' to quantify whether diffusion looks like a broadcast (one-to-many) or a multi-generation viral cascade. Using very large Twitter diffusion data, they show that online diffusion has substantial structural diversity, but many popular events are still driven by big broadcasts rather than deep multi-step spread. For my thesis, this provides a widely accepted set of structural concepts and measurements to describe diffusion trees, which helps me define and justify my early structural features. It also gives a useful caution: a large cascade does not necessarily mean it is structurally ``viral.'' The paper is not about misinformation, but it offers a strong measurement framework that my work can reuse in a veracity-aware early-warning context.}
+}
+
+@article{lerman_information_2010,
+  title   = {Information Contagion: An Empirical Study of the Spread of News on Digg and Twitter Social Networks},
+  author  = {Lerman, Kristina and Ghosh, Rumi},
+  journal = {Proceedings of the International AAAI Conference on Web and Social Media (ICWSM)},
+  year    = {2010},
+  volume  = {4},
+  number  = {1},
+  pages   = {90--97},
+  doi     = {10.1609/icwsm.v4i1.14021},
+  url     = {https://ojs.aaai.org/index.php/ICWSM/article/view/14021},
+  %annote  = {Lerman and Ghosh (2010) study how news spreads on Digg and Twitter and emphasize the role of attention constraints and network structure. They show that most items do not spread far and that network centrality alone does not guarantee influence, partly because highly connected users face limited attention. For my thesis, this is a useful background piece: diffusion patterns are shaped by human attention and platform dynamics, not only by content. It also supports my motivation for focusing on early diffusion behavior rather than assuming influence is concentrated in a few accounts. The paper does not distinguish misinformation from other information, so I use it mainly as general diffusion grounding before moving to veracity-specific work.}
+}
+
+@article{lerman_information_2016,
+  title   = {Information Is Not a Virus, and Other Consequences of Human Cognitive Limits},
+  author  = {Lerman, Kristina},
+  journal = {Future Internet},
+  year    = {2016},
+  volume  = {8},
+  number  = {2},
+  pages   = {21},
+  doi     = {10.3390/fi8020021},
+  url     = {https://www.mdpi.com/1999-5903/8/2/21},
+  %annote  = {Lerman (2016) argues that treating information diffusion as a literal epidemic process can be misleading, because human cognition and limited attention shape what people actually see and share. The paper highlights mechanisms like exposure limits, competition among messages, and behavioral constraints that can distort simple ``virus'' metaphors. For my thesis, this is helpful because it keeps my interpretation careful: early diffusion patterns may reflect attention and platform filtering, not just intrinsic ``infectiousness'' of misinformation. It also motivates why early warning is hard---signals may be partially driven by cognitive limits rather than stable content quality. This paper is more conceptual than dataset-driven, so I use it mainly to frame mechanisms and interpretation instead of as direct empirical evidence.}
+}
+
+@inproceedings{ma_detecting_2016,
+  title     = {Detecting Rumors from Microblogs with Recurrent Neural Networks},
+  author    = {Ma, Jing and Gao, Wei and Mitra, Prasenjit and Kwon, Sejeong and Jansen, Bernard J. and Wong, Kam-Fai and Cha, Meeyoung},
+  booktitle = {Proceedings of the Twenty-Fifth International Joint Conference on Artificial Intelligence (IJCAI)},
+  year      = {2016},
+  pages     = {3818--3824},
+  url       = {https://www.ijcai.org/Proceedings/16/Papers/538.pdf},
+  %annote    = {Ma et al. (2016) propose an RNN-based approach for rumor detection on microblogs, leveraging how discussion signals evolve over time rather than relying only on static features. They show that modeling temporal sequences can improve detection performance and can potentially identify rumors earlier than traditional feature-engineered baselines. This is relevant to my thesis because it represents the broader early-detection direction: using partial, early signals to make judgments before a rumor fully diffuses. At the same time, many models in this line rely heavily on text streams and platform-specific metadata, which may be noisy or unavailable in some early-warning settings. My project complements this by asking whether early diffusion-tree structure and timing alone can be informative for prediction and warning.}
+}
+
+@book{rogers_diffusion_2003,
+  title     = {Diffusion of Innovations},
+  author    = {Rogers, Everett M.},
+  year      = {2003},
+  edition   = {5},
+  publisher = {Free Press},
+  address   = {New York},
+  %annote    = {Rogers (2003) provides a classic framework for understanding how innovations and ideas spread through social systems, emphasizing adoption stages, communication channels, and social structure. A key idea I use is that diffusion is not random: it follows identifiable social processes, and early adoption can meaningfully shape later trajectories. For my thesis, this gives conceptual grounding for why early diffusion stages are worth studying, even before modern social media data and algorithms. It also helps justify my focus on diffusion dynamics (timing and relational structure) rather than treating sharing as isolated individual decisions. Since the framework predates online platforms, it does not provide operational measures for diffusion trees, so my work builds on the idea but implements it with modern cascade data and features.}
+}
+
+@article{shu_fake_2017,
+  title   = {Fake News Detection on Social Media: A Data Mining Perspective},
+  author  = {Shu, Kai and Sliva, Amy and Wang, Suhang and Tang, Jiliang and Liu, Huan},
+  journal = {SIGKDD Explorations},
+  year    = {2017},
+  volume  = {19},
+  number  = {1},
+  pages   = {22--36},
+  doi     = {10.1145/3137597.3137600},
+  url     = {https://dl.acm.org/doi/10.1145/3137597.3137600},
+  %annote  = {Shu et al. (2017) survey fake news detection research and summarize how content features, user features, and network signals are used in computational pipelines. The review is useful for positioning my thesis within the larger detection literature and for explaining why diffusion-based features are often considered alongside text-based classifiers. It also highlights common challenges such as early detection, evaluation across events, and data quality issues. For my project, the main value is framing: I can clearly explain how an early-warning approach based on diffusion trees differs from standard classification that focuses on content. Because the survey is broad, it does not go deeply into diffusion-tree structure or early cascade dynamics, which is the specific gap my work targets.It’s written as a survey/overview, so I mainly use it to quickly map the detection literature (methods, datasets, evaluation) and position my diffusion-focused angle.}
+}
+
+@article{szabo_predicting_2010,
+  title   = {Predicting the Popularity of Online Content},
+  author  = {Szabo, Gabor and Huberman, Bernardo A.},
+  journal = {Communications of the ACM},
+  year    = {2010},
+  volume  = {53},
+  number  = {8},
+  pages   = {80--88},
+  doi     = {10.1145/1787234.1787254},
+  url     = {https://dl.acm.org/doi/10.1145/1787234.1787254},
+  %annote  = {Szabo and Huberman (2010) show that early attention signals (views or votes) can predict long-run popularity for online content, but the required early window depends on platform dynamics. They compare YouTube and Digg and argue that differences in attention decay explain why prediction horizons vary across platforms. For my thesis, this provides a simple and credible precedent that early-stage signals can be predictive, even when we observe only a partial trajectory. It also motivates being explicit about the observation window when designing early-warning models. The limitation is that the paper predicts popularity rather than misinformation risk, and it focuses on aggregate counts more than diffusion-tree structure, which my project tries to incorporate.}
+}
+
+@article{vosoughi_spread_2018,
+  title   = {The Spread of True and False News Online},
+  author  = {Vosoughi, Soroush and Roy, Deb and Aral, Sinan},
+  journal = {Science},
+  year    = {2018},
+  volume  = {359},
+  number  = {6380},
+  pages   = {1146--1151},
+  doi     = {10.1126/science.aap9559},
+  url     = {https://www.science.org/doi/10.1126/science.aap9559},
+  %annote  = {Vosoughi, Roy, and Aral (2018) use large-scale Twitter cascade data to compare diffusion of true versus false news and document systematic differences in speed, depth, and reach. They find false news spreads farther and faster, with especially strong effects for political misinformation, and they argue the pattern is not primarily driven by bots. The paper suggests plausible mechanisms such as novelty and emotional reactions, emphasizing that human sharing behavior is central. This is foundational for my thesis because it supports the core idea that diffusion patterns differ by veracity, so diffusion structure can be informative. However, the analysis is mainly retrospective and focuses on complete cascades, while my project asks whether early-stage diffusion signals alone can support prediction and early warning.}
+}
+
+@article{weng_virality_2013,
+  title   = {Virality Prediction and Community Structure in Social Networks},
+  author  = {Weng, Lilian and Menczer, Filippo and Ahn, Yong-Yeol},
+  journal = {Scientific Reports},
+  year    = {2013},
+  volume  = {3},
+  pages   = {2522},
+  doi     = {10.1038/srep02522},
+  url     = {https://www.nature.com/articles/srep02522},
+  %annote  = {Weng, Menczer, and Ahn (2013) link diffusion outcomes to community structure and show that whether a cascade crosses communities can matter for virality and prediction. The key value for my thesis is that diffusion success is not only about early volume; structural dispersion across communities can be a meaningful early signal. This aligns with my plan to include structural features that capture breadth, diversity, or cross-group spread when building early-warning predictors. It also complements complex contagion ideas, because reinforcement and community boundaries can shape how diffusion unfolds. The paper is not about misinformation labels, so my contribution is to test whether similar structural signals help distinguish or forecast misinformation-related diffusion trajectories in early stages.}
+}
+
+@article{zubiaga_detection_2018,
+  title   = {Detection and Resolution of Rumours in Social Media: A Survey},
+  author  = {Zubiaga, Arkaitz and Aker, Ahmet and Bontcheva, Kalina and Liakata, Maria and Procter, Rob},
+  journal = {ACM Computing Surveys},
+  year    = {2018},
+  volume  = {51},
+  number  = {2},
+  pages   = {32:1--32:36},
+  doi     = {10.1145/3161603},
+  url     = {https://dl.acm.org/doi/10.1145/3161603},
+  %annote  = {Zubiaga et al. (2018) provide a comprehensive survey of rumor research and organize the field into a pipeline: rumor detection, tracking, stance classification, and veracity assessment. They emphasize practical constraints such as early-stage uncertainty, fast-moving events, and limited ground truth, which matches the motivation for early warning. For my thesis, this survey is useful for positioning my work clearly: I am not trying to solve every component, but focusing on early diffusion signals that could support timely warning decisions. It also helps me explain how diffusion-based signals relate to content- and user-based methods discussed in prior work. Because it is a broad overview, it does not directly test my specific diffusion-tree feature approach, so my thesis fills that narrow but practical empirical gap. This paper is a review article (survey) and I use it to position my project within the broader rumor/misinformation detection method.}
+}
+@article{lazer_science_2018,
+  title   = {The Science of Fake News},
+  author  = {Lazer, David M. J. and Baum, Matthew A. and Benkler, Yochai and Berinsky, Adam J. and Greenhill, Kelly M. and Menczer, Filippo and Metzger, Miriam J. and Nyhan, Brendan and Pennycook, Gordon and Rothschild, David and Schudson, Michael and Sloman, Steven A. and Sunstein, Cass R. and Thorson, Emily A. and Watts, Duncan J. and Zittrain, Jonathan L.},
+  journal = {Science},
+  year    = {2018},
+  volume  = {359},
+  number  = {6380},
+  pages   = {1094--1096},
+  doi     = {10.1126/science.aao2998},
+  url     = {https://www.science.org/doi/10.1126/science.aao2998},
+  %annote  = {Lazer et al. (2018) is a short agenda-setting piece that frames ``fake news'' as a scientific problem spanning psychology, political science, network diffusion, and platform design. Rather than proposing a specific model, it clarifies why misinformation is difficult to study (measurement, incentives, and shifting contexts) and why interdisciplinary approaches are needed. For my thesis, it helps justify the early-warning motivation at a high level: harmful misinformation is a system-level phenomenon on social media, so studying diffusion dynamics (including early-stage patterns) is substantively important. I mainly use it for positioning and motivation, not as direct empirical evidence about early diffusion features.}
+}
+
+@techreport{allcott_gentzkow_2017,
+  title       = {Social Media and Fake News in the 2016 Election},
+  author      = {Allcott, Hunt and Gentzkow, Matthew},
+  institution = {National Bureau of Economic Research},
+  year        = {2017},
+  number      = {23089},
+  doi         = {10.3386/w23089},
+  url         = {https://www.nber.org/papers/w23089},
+  %annote      = {Allcott and Gentzkow (2017) analyze the role of social media in exposure to fake news during the 2016 U.S. election and discuss mechanisms that shape misinformation consumption (supply incentives, demand/partisanship, and platform distribution). Although it is not a cascade-structure paper, it provides a clear economic framing for why misinformation spreads and why early intervention could matter. For my thesis, this paper supports the broader motivation for studying misinformation diffusion on platforms and helps justify why ``early warning'' is a meaningful objective beyond pure prediction accuracy. I use it mainly as background on the social media information environment rather than as a source of specific diffusion-tree features.}
+}
+
+@article{grinberg_fake_2019,
+  title   = {Fake News on Twitter during the 2016 U.S. Presidential Election},
+  author  = {Grinberg, Nir and Joseph, Kenneth and Friedland, Lisa and Swire-Thompson, Briony and Lazer, David},
+  journal = {Science},
+  year    = {2019},
+  volume  = {363},
+  number  = {6425},
+  pages   = {374--378},
+  doi     = {10.1126/science.aau2706},
+  url     = {https://www.science.org/doi/10.1126/science.aau2706},
+  %annote  = {Grinberg et al. (2019) quantify exposure and sharing of fake news on Twitter during the 2016 election and show that engagement is highly concentrated among a small subset of users. The main contribution is descriptive but important: misinformation diffusion can be uneven and driven by a limited share of accounts and audiences. For my thesis, this supports the relevance of diffusion dynamics and motivates robustness/generalization concerns: diffusion patterns may depend on event context and user populations. I use it to motivate the practical value of early warning (identifying risky cascades early) and to justify why diffusion-based signals may coexist with concentration among certain users, without assuming that identifying ``super spreaders'' alone solves the problem.}
+}
+
+@article{colbaugh_earlywarning_2012,
+  title   = {Early Warning Analysis for Social Diffusion Events},
+  author  = {Colbaugh, Richard and Glass, Kristin},
+  journal = {Security Informatics},
+  year    = {2012},
+  volume  = {1},
+  pages   = {18},
+  doi     = {10.1186/2190-8532-1-18},
+  url     = {https://securityinformatics.biomedcentral.com/articles/10.1186/2190-8532-1-18},
+  %annote  = {Colbaugh and Glass (2012) explicitly frame diffusion modeling as an early-warning problem: the goal is to identify emerging diffusion events from partial and noisy early observations, with value measured by timeliness as well as accuracy. This paper is directly relevant to my thesis framing because it provides precedent for treating the early-stage constraint as central rather than incidental. It helps motivate why I evaluate performance across multiple early windows and why I emphasize the timeliness--accuracy trade-off. I mainly use it for conceptual and evaluation framing, not for any single specific feature set.}
+}
+
+@inproceedings{ma_tree_rnn_2018,
+  title     = {Rumor Detection on Twitter with Tree-structured Recursive Neural Networks},
+  author    = {Ma, Jing and Gao, Wei and Wong, Kam-Fai},
+  booktitle = {Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (ACL)},
+  year      = {2018},
+  pages     = {198--207},
+  doi       = {10.18653/v1/P18-1184},
+  url       = {https://aclanthology.org/P18-1184/},
+  %annote    = {Ma, Gao, and Wong (2018) propose a tree-structured recursive neural network that leverages propagation tree structure for rumor detection on Twitter. The key insight is that conversation/retweet structure contains veracity-relevant information and can be modeled hierarchically, improving performance over flat representations. For my thesis, this paper supports the propagation-aware direction and strengthens the motivation for using tree-based diffusion signals rather than relying only on text. At the same time, many structure-aware neural models are evaluated with substantial portions of the cascade observed, so my project complements this by asking what can be achieved under explicit early-window constraints using interpretable structural and temporal features.}
+}
+
+@inproceedings{bian_bigcn_2020,
+  title     = {Rumor Detection on Social Media with Bi-Directional Graph Convolutional Networks},
+  author    = {Bian, Tian and Xiao, Xue and Xu, Tingyang and Zhao, Peilin and Huang, Wenbing and Rong, Yu and Huang, Junzhou},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence (AAAI)},
+  year      = {2020},
+  volume    = {34},
+  number    = {01},
+  pages     = {549--556},
+  doi       = {10.1609/aaai.v34i01.5393},
+  url       = {https://ojs.aaai.org/index.php/AAAI/article/view/5393},
+  %annote    = {Bian et al. (2020) develop BiGCN, a graph convolutional approach that models rumor propagation with both top-down and bottom-up information flow, capturing relational dependencies in diffusion. The paper is relevant to my thesis because it shows that propagation structure can be encoded as a graph signal and used for accurate rumor classification. It also reinforces the idea that diffusion carries veracity-relevant patterns beyond text. For my project, I use it to motivate propagation-aware baselines and to justify focusing on structural/temporal patterns, while keeping my main empirical emphasis on early-window feasibility and cross-dataset robustness rather than maximizing in-sample accuracy with complex models.}
+}
+
+@inproceedings{liu2015real,
+  title     = {Real-Time Rumor Debunking on Twitter},
+  author    = {Liu, Xiaomo and Nourbakhsh, Armineh and Li, Quanzhi and Fang, Rui and Shah, Sameena},
+  booktitle = {Proceedings of the 24th ACM International Conference on Information and Knowledge Management (CIKM)},
+  year      = {2015},
+  pages     = {1867--1870},
+  doi       = {10.1145/2806416.2806651}
+}
+
+@inproceedings{ma2016detecting,
+  title     = {Detecting Rumors from Microblogs with Recurrent Neural Networks},
+  author    = {Ma, Jing and Gao, Wei and Mitra, Prasenjit and Kwon, Sejeong and Jansen, Bernard J. and Wong, Kam-Fai and Cha, Meeyoung},
+  booktitle = {Proceedings of the Twenty-Fifth International Joint Conference on Artificial Intelligence (IJCAI)},
+  year      = {2016},
+  pages     = {3818--3824}
+}
+
+@inproceedings{ma2017detect,
+  title     = {Detect Rumors in Microblog Posts Using Propagation Structure via Kernel Learning},
+  author    = {Ma, Jing and Gao, Wei and Wong, Kam-Fai},
+  booktitle = {Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (ACL)},
+  year      = {2017},
+  pages     = {708--717},
+  doi       = {10.18653/v1/P17-1066}
+}
+
+@misc{pheme_figshare_rnr_2016,
+  title        = {PHEME dataset of rumours and non-rumours},
+  author       = {Zubiaga, Arkaitz and Wong Sak Hoi, Geraldine and Liakata, Maria and Procter, Rob},
+  year         = {2016},
+  howpublished = {figshare dataset}
+}
+
+@inproceedings{gorrell2019rumoureval,
+  title     = {SemEval-2019 Task 7: RumourEval, Determining Rumour Veracity and Support for Rumours},
+  author    = {Gorrell, Genevieve and Kochkina, Elena and Liakata, Maria and Aker, Ahmet and Zubiaga, Arkaitz and Bontcheva, Kalina and Derczynski, Leon},
+  booktitle = {Proceedings of the 13th International Workshop on Semantic Evaluation (SemEval)},
+  year      = {2019},
+  pages     = {845--854},
+  doi       = {10.18653/v1/S19-2147}
+}
+
+@article{shu2018fakenewsnet,
+  title   = {FakeNewsNet: A Data Repository with News Content, Social Context and Spatiotemporal Information for Studying Fake News on Social Media},
+  author  = {Shu, Kai and Mahudeswaran, Deepak and Wang, Suhang and Lee, Dongwon and Liu, Huan},
+  journal = {arXiv preprint arXiv:1809.01286},
+  year    = {2018}
+}
+
+@inproceedings{chen_xgboost_2016,
+  title     = {XGBoost: A Scalable Tree Boosting System},
+  author    = {Chen, Tianqi and Guestrin, Carlos},
+  booktitle = {Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD)},
+  year      = {2016},
+  pages     = {785--794},
+  doi       = {10.1145/2939672.2939785}
+}
+
+@article{mckinney_pandas_2010,
+  title   = {Data Structures for Statistical Computing in Python},
+  author  = {McKinney, Wes},
+  journal = {Proceedings of the 9th Python in Science Conference (SciPy)},
+  year    = {2010},
+  pages   = {56--61}
+}
+
+@inproceedings{hagberg_networkx_2008,
+  title     = {Exploring Network Structure, Dynamics, and Function Using NetworkX},
+  author    = {Hagberg, Aric A. and Schult, Daniel A. and Swart, Pieter J.},
+  booktitle = {Proceedings of the 7th Python in Science Conference (SciPy)},
+  year      = {2008}
+}
+
+@article{pedregosa_scikit_2011,
+  title   = {Scikit-learn: Machine Learning in Python},
+  author  = {Pedregosa, Fabian and Varoquaux, Ga{"e}l and Gramfort, Alexandre and Michel, Vincent and Thirion, Bertrand and Grisel, Olivier and Blondel, Mathieu and Prettenhofer, Peter and Weiss, Ron and Dubourg, Vincent and Vanderplas, Jake and Passos, Alexandre and Cournapeau, David and Brucher, Matthieu and Perrot, Matthieu and Duchesnay, {\'{E}}douard},
+  journal = {Journal of Machine Learning Research},
+  year    = {2011},
+  volume  = {12},
+  pages   = {2825--2830}
+}
+@article{hawkes1971spectra,
+  title   = {Spectra of Some Self-Exciting and Mutually Exciting Point Processes},
+  author  = {Hawkes, Alan G.},
+  journal = {Biometrika},
+  year    = {1971},
+  volume  = {58},
+  number  = {1},
+  pages   = {83--90},
+  doi     = {10.1093/biomet/58.1.83}
+}
+
+@inproceedings{rizoiu2017expecting,
+  title={Expecting to be hip: Hawkes intensity processes for social media popularity},
+  author={Rizoiu, Marian-Andrei and Xie, Lexing and Sanner, Scott and Cebrian, Manuel and Yu, Honglin and Van Hentenryck, Pascal},
+  booktitle={Proceedings of the 26th international conference on world wide web},
+  pages={735--744},
+  year={2017}
+}
+
+@inproceedings{linderman2014discovering,
+  title={Discovering latent network structure in point process data},
+  author={Linderman, Scott and Adams, Ryan},
+  booktitle={International conference on machine learning},
+  pages={1413--1421},
+  year={2014},
+  organization={PMLR}
+}
+
+@article{crane2008robust,
+  title={Robust dynamic classes revealed by measuring the response function of a social system},
+  author={Crane, Riley and Sornette, Didier},
+  journal={Proceedings of the National Academy of Sciences},
+  volume={105},
+  number={41},
+  pages={15649--15653},
+  year={2008},
+  publisher={National Academy of Sciences}
+}
+
+@article{choi_dynamicgcn_2021,
+  title   = {Dynamic graph convolutional networks with attention mechanism for rumor detection on social media},
+  author  = {Choi, Jiho and Ko, Taewook and Choi, Younhyuk and Byun, Hyungho and Kim, Chong-kwon},
+  journal = {PLOS ONE},
+  year    = {2021},
+  volume  = {16},
+  number  = {8},
+  pages   = {e0256039},
+  doi     = {10.1371/journal.pone.0256039}
+}

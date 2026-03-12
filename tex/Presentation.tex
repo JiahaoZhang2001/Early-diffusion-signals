@@ -1,0 +1,137 @@
+\documentclass{beamer}
+
+\usetheme{Boadilla}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\title{Early Diffusion Signals for Predicting Reach and Veracity in Social Media Rumor Cascades}
+\subtitle{Paper track: thesis presentation}
+\author{Jiahao Zhang}
+\institute{University of Chicago}
+\date{February 2026}
+
+\begin{document}
+
+\section{Background}
+\begin{frame}
+\titlepage
+% NOTES: Open with the core research theme and keep the framing concise. Transition quickly to the agenda.
+\end{frame}
+
+\begin{frame}{Motivation: Why Early Warning Matters}
+\begin{itemize}
+\item \textbf{Timing Problem:} misinformation can scale before reliable verification arrives.
+\item \textbf{Example 1 (large reach):} ``did you know that microsoft actually uses dog noses for thumbsticks on the gamecube controller?'' (Twitter16, root \texttt{640644123339431936}).
+\item \textbf{Example 2 (smaller reach):} ``president of argentina adopts jewish godson to 'stop him turning into a werewolf' '' (Twitter15, root \texttt{549124560793374720}).
+\item \textbf{Early Similarity:} at \(T=60\) min both cascades look very similar in early structure (volume/depth/width around \(65/2/56\sim57\)).
+\item \textbf{Outcome Divergence:} final size diverges sharply (\(1453\) vs \(124\)).
+\item \textbf{Implication:} this is exactly why early-warning signals are valuable for timely triage.
+\end{itemize}
+% NOTES: Keep this slide concrete and narrative: same early snapshot, different eventual reach.
+\end{frame}
+
+\begin{frame}{Brief Literature}
+\begin{itemize}
+\item \textbf{Prior Findings:} prior studies find veracity-linked diffusion differences, but mostly from retrospective or full-cascade analysis (e.g., Vosoughi et al., 2018; Del Vicario et al., 2016).
+\item \textbf{Open Gap:} it remains unclear whether useful signals appear early enough for actionable intervention.
+\item \textbf{This Approach:} we use early observation windows with structural and temporal features beyond early volume alone.
+\item \textbf{Scope Today:} this talk uses FibVID as the main empirical setting and keeps Twitter15/16 as a comparative benchmark.
+\end{itemize}
+% NOTES: Keep the citation visible on the first bullet and keep each bullet title word bolded.
+\end{frame}
+
+\begin{frame}{Outline}
+\tableofcontents
+% NOTES: Signal the flow: motivation, setup, results, implications, and next steps. Keep timing tight for a 5--10 minute talk.
+\end{frame}
+
+\section{Data \& Methods}
+\begin{frame}{Data}
+\begin{itemize}
+\item Main dataset: FibVID claim-level propagation records, converted into a cascade-compatible representation for the core analysis.
+\item Comparative benchmark: Twitter15/16 rumor cascades under the original rumor-tree format.
+\item Both datasets provide timestamps and veracity labels, while the main design keeps early observation rules comparable.
+\item Full or harmonized structure + timing lets us slice the first \(T\) minutes or first \(k\) posts without peeking at later spread.
+\end{itemize}
+% NOTES: This dataset matches the early-window design because tree structure and timestamps are both available from the start of each cascade.
+% NOTES: Emphasize that current empirical evidence in this talk is intentionally limited to Twitter15/16.
+\end{frame}
+
+\begin{frame}{Methods}
+\begin{itemize}
+\item Construct early observation windows from each cascade.
+\item Extract structural and temporal features from partial trees.
+\item Compare task-specific models under the same early-signal framework.
+\item Evaluate whether early diffusion carries predictive information for both tasks.
+\end{itemize}
+\begin{center}
+\IfFileExists{assets/early_window_tree.jpg}{\includegraphics[width=0.72\linewidth]{assets/early_window_tree.jpg}}{\small (Missing file: assets/early_window_tree.jpg)}
+\end{center}
+% NOTES: Walk through pipeline steps once and point to the schematic. Avoid result interpretation on this slide.
+\end{frame}
+
+\section{Results}
+\begin{frame}{Results (Twitter15/16): Veracity Prediction}
+\begin{itemize}
+\item Early-window diffusion features provide usable signal for veracity prediction.
+\item The figure and table summarize previously generated Twitter15/16 veracity outputs.
+\item Interpretation remains bounded to the current dataset and setup.
+\end{itemize}
+\begin{columns}[T,onlytextwidth]
+\column{0.58\textwidth}
+\centering
+\IfFileExists{assets/F1K_k_veracity_primary.pdf}{\includegraphics[width=0.95\linewidth]{assets/F1K_k_veracity_primary.pdf}}{\small (Missing file: assets/F1K_k_veracity_primary.pdf)}
+\column{0.40\textwidth}
+\IfFileExists{assets/twitter15_16_veracity_results.tex}{\input{assets/twitter15_16_veracity_results.tex}}{\small (Missing file: assets/twitter15_16_veracity_results.tex)}
+\end{columns}
+% NOTES: Highlight the main directional takeaway without introducing new metrics. Keep language strictly tied to displayed outputs.
+\end{frame}
+
+\begin{frame}{Results (Twitter15/16): Reach Prediction}
+\begin{itemize}
+\item Early diffusion information is also informative for reach prediction.
+\item The figure and table summarize previously generated Twitter15/16 reach outputs.
+\item Together with veracity, this supports a multi-task early-signal perspective.
+\end{itemize}
+\begin{columns}[T,onlytextwidth]
+\column{0.58\textwidth}
+\centering
+\IfFileExists{assets/F2K_k_reach_primary.pdf}{\includegraphics[width=0.95\linewidth]{assets/F2K_k_reach_primary.pdf}}{\small (Missing file: assets/F2K_k_reach_primary.pdf)}
+\column{0.40\textwidth}
+\IfFileExists{assets/twitter15_16_reach_results.tex}{\input{assets/twitter15_16_reach_results.tex}}{\small (Missing file: assets/twitter15_16_reach_results.tex)}
+\end{columns}
+% NOTES: Keep comparison conceptual: same framework, different task. Avoid adding claims beyond the shown Twitter15/16 outputs.
+\end{frame}
+
+\section{Discussion}
+\begin{frame}{Discussion}
+\begin{itemize}
+\item Practical use: supports earlier triage, monitoring priority, and resource allocation workflows.
+\item Conceptual signal: early cascade structure appears informative beyond simple early volume counts.
+\item Limitations: dataset and window-design choices may affect transferability and operational fit.
+\item Risks to monitor: leakage pathways, heavy-tailed outcomes, and sensitivity to evaluation setup.
+\end{itemize}
+% NOTES: Balance practical implications with caution on limits. Frame this as evidence for utility, not a final deployment claim.
+\end{frame}
+
+\section{Next Steps}
+\begin{frame}{Future Work}
+\begin{itemize}
+\item Time-window results are kept as the main robustness check alongside the size-based design.
+\item Twitter15/16 remain useful as a benchmark for judging which patterns carry over from the original rumor-tree setting.
+\item A supplementary native-graph analysis on FibVID suggests that veracity is more representation-sensitive than reach.
+\item The main practical implication is staged triage rather than strong truth classification.
+\end{itemize}
+% NOTES: Mark all items as planned work and keep non-numeric. Position this as the roadmap after current Twitter15/16 findings.
+\end{frame}
+
+\section{Q\&A}
+\begin{frame}{Q\&A + GitHub Repo}
+\begin{itemize}
+\item Code repository: \href{https://github.com/JiahaoZhang2001/Early-diffusion-signals.git}{github.com/JiahaoZhang2001/Early-diffusion-signals}
+\item Questions?
+\end{itemize}
+% NOTES: Close with the repository link and invite discussion. Keep this slide minimal and readable.
+\end{frame}
+
+\end{document}

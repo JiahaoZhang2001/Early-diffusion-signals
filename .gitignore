@@ -4,3 +4,26 @@ __pycache__/
 *.pyc
 .vscode/
 thesis_outputs/
+.venv/
+.venv_newdata/
+.venv_timewin/
+new data/
+artifacts/
+merry555-FibVID-14b95c3/
+Data/pheme-rnr-dataset/
+Data/pheme-rumour-scheme-dataset/
+Data/rumoureval2019/
+tex/*.aux
+tex/*.bcf
+tex/*.fdb_latexmk
+tex/*.fls
+tex/*.log
+tex/*.out
+tex/*.pdf
+tex/*.run.xml
+tex/presentation_bundle.zip
+tex.zip
+results/
+annotated-Early_Diffusion_Signals_for_Predicting_Reach_and_Veracity_in_Social_Media_Rumor_Cascades__paper_track___thesis_paper_%20%2810%29.pdf
+timewin_compare.py
+timewin_compute.py
