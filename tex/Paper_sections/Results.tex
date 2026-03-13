@@ -1,6 +1,6 @@
-This section reports the end-to-end results from the updated early-window pipeline using (i) residualized structural shape descriptors, (ii) Hawkes-style dynamic parameters, and (iii) structure--tempo interaction terms. The main analysis is conducted on FibVID in size-based windows ($k \in \{10,20,30,45,60,90,120,180\}$), which hold early volume fixed by design. Twitter15/16 are then used as a comparative benchmark, and time-window results are reported as robustness checks.
+This section reports the end-to-end results from the updated early-window pipeline using (i) residualized structural shape descriptors, (ii) Hawkes-style dynamic parameters, and (iii) structure--tempo interaction terms. The organization follows the final design of the paper. I first report the main FibVID results under the size-based $k$-window specification, which is the primary empirical setting. I then compare those results to the original Twitter15/16 benchmark, add a supplementary representation check for veracity, and finally report time-window robustness results. This ordering is meant to answer the two main research questions directly: whether early diffusion is informative for eventual reach, and whether it is similarly informative for veracity.
 
-\subsection{FibVID Main Results in Size-Based Windows}
+\subsection{FibVID Main Results: Answering the Two Core Questions}
 Figure~\ref{fig:k_veracity_main} and Figure~\ref{fig:k_reach_main} show the full trajectory across $k$ for FibVID veracity (AUC) and reach ($R^2$). Here, \emph{structure-only} denotes residualized structural shape features only (no tempo, dynamics, or interaction terms): this ablation isolates structural incremental signal and helps avoid treating volume effects as structure effects. At each fixed window, the gaps baseline$\rightarrow$structure-only and structure-only$\rightarrow$full/interaction-full are interpreted as incremental value from structure, then from added dynamics/interactions. The horizontal axis is window size $k$ and the vertical axis is performance (AUC or $R^2$, higher is better); colored lines are feature bundles and error bars are 95\% CIs from SE over fixed CV folds.
 
 \begin{figure}[htbp]
@@ -17,7 +17,9 @@ Figure~\ref{fig:k_veracity_main} and Figure~\ref{fig:k_reach_main} show the full
   \label{fig:k_reach_main}
 \end{figure}
 
-The main pattern remains asymmetric across tasks, but it looks different from the earlier Twitter-only version. On FibVID, veracity performance is modest throughout. The strongest baseline logit result appears late rather than early, reaching AUC $\approx 0.591$ at $k=180$, while richer bundles do not improve consistently over that baseline. Reach is much stronger. Even simple baseline models perform well, and full bundles remain high throughout the larger windows, with OLS reaching $R^2 \approx 0.886$ at $k=180$ and the interaction-full specification peaking at about $R^2=0.861$ at $k=120$. In other words, early diffusion remains much more informative for eventual reach than for veracity. Table~\ref{tab:k_main_selected} reports selected baseline-vs-full comparisons at representative $k$ windows.
+The main pattern is asymmetric across tasks, and this answers the two core questions of the paper differently. For eventual reach, the answer is clearly yes: on FibVID, early diffusion is strongly informative. Even simple baseline models perform well, and full bundles remain high throughout the larger windows, with OLS reaching $R^2 \approx 0.886$ at $k=180$ and the interaction-full specification peaking at about $R^2=0.861$ at $k=120$. For veracity, the answer is much more qualified. Veracity performance is modest throughout. The strongest baseline logit result appears late rather than early, reaching AUC $\approx 0.591$ at $k=180$, while richer bundles do not improve consistently over that baseline. Table~\ref{tab:k_main_selected} reports selected baseline-vs-full comparisons at representative $k$ windows.
+
+This split matters substantively, not just descriptively. Much of the earlier literature established that false and true content can look different once full cascades are observed, especially in retrospective studies such as \citet{vosoughi_spread_2018}. The FibVID results show that this does not automatically translate into strong \emph{early} classifiability. Early diffusion geometry appears to carry much more recoverable information about how far a cascade will spread than about whether the underlying claim is false. That is the first main empirical answer of the thesis.
 
 \begin{table}[htbp]
   \centering
@@ -35,7 +37,7 @@ The main pattern remains asymmetric across tasks, but it looks different from th
   \end{tabular}
 \end{table}
 
-\subsection{Model Family Comparison and Incremental Gain}
+\subsection{What Additional Structure and Dynamics Contribute}
 Figure~\ref{fig:model_family_k} and Figure~\ref{fig:delta_gain_k} separate model-class effects from feature-bundle effects. Figure~\ref{fig:model_family_k} compares model families under the full bundle, while Figure~\ref{fig:delta_gain_k} shows incremental gain (full minus baseline) by model family. In Figure~\ref{fig:delta_gain_k}, bars above zero ($\Delta$AUC/$\Delta R^2 > 0$) mean full outperforms baseline; bars below zero indicate the opposite. On FibVID, the main takeaway is again task-specific. For veracity, model-class differences are limited and no model produces strong discrimination. For reach, all model families perform well at larger windows, with tree-based regressors especially strong in later windows. Table~\ref{tab:model_family_examples} summarizes model-family performance at representative early and late windows.
 
 \begin{figure}[htbp]
@@ -68,9 +70,9 @@ Figure~\ref{fig:model_family_k} and Figure~\ref{fig:delta_gain_k} separate model
   \end{tabular}
 \end{table}
 
-Two takeaways emerge. First, for veracity, linear logit remains competitive in mid windows, and the overall gains from greater model flexibility are limited. Second, for reach, tree-based regressors dominate late windows, indicating that non-linear effects matter much more for diffusion-outcome prediction than for veracity screening.
+Two takeaways emerge. First, for veracity, linear logit remains competitive in mid windows, and the overall gains from greater model flexibility are limited. Second, for reach, tree-based regressors dominate late windows, indicating that non-linear effects matter much more for diffusion-outcome prediction than for veracity screening. In terms of the paper's hypotheses, this section supports the claim that richer structural and dynamic features add more for reach than for veracity. It also strengthens the interpretation that the veracity task is better read as screening than as high-accuracy classification.
 
-\subsection{Statistical Tests and Signal Validation}
+\subsection{How Strong Is the Signal? Statistical Validation}
 Table~\ref{tab:k_paired_tests} reports paired fold-level $t$-tests comparing baseline vs. interaction-full models on FibVID. Figure~\ref{fig:perm_k60} provides permutation-based validation at $k=60$.
 
 \begin{table}[!htbp]
@@ -97,14 +99,14 @@ Table~\ref{tab:k_paired_tests} reports paired fold-level $t$-tests comparing bas
   \label{fig:perm_k60}
 \end{figure}
 
-The permutation results sharpen the task asymmetry. At $k=60$, observed reach $R^2$ is 0.829 versus a null mean of $-0.329$ (empirical $p=0/200$), which indicates a clear non-random signal. For veracity, observed AUC is 0.547 versus a null mean of 0.500, but the empirical $p$-value is 0.195. This is consistent with the earlier reading of the main figures: on FibVID, diffusion features are much more convincing for reach than for veracity.
+The permutation results sharpen the task asymmetry. At $k=60$, observed reach $R^2$ is 0.829 versus a null mean of $-0.329$ (empirical $p=0/200$), which indicates a clear non-random signal. For veracity, observed AUC is 0.547 versus a null mean of 0.500, but the empirical $p$-value is 0.195. This is consistent with the earlier reading of the main figures: on FibVID, diffusion features are much more convincing for reach than for veracity. Put differently, the evidence level is not symmetric across the two research questions. The reach result is statistically and substantively strong, whereas the veracity result is weaker and should be interpreted more cautiously.
 
 \subsection{Comparative Benchmark: Twitter15/16}
 The Twitter15/16 benchmark helps show which parts of the pattern carry over from the original rumor-tree setting. The basic asymmetry remains. Under the benchmark, the best interaction-full veracity result reaches AUC $\approx 0.657$ at $k=20$, while interaction-full reach reaches $R^2 \approx 0.719$ at $k=180$. Model-family comparisons in the benchmark also point in the same broad direction as FibVID: logit remains competitive for veracity in earlier windows, whereas tree-based regressors are stronger for reach, especially at larger $k$.
 
 Relative to Twitter15/16, FibVID weakens the veracity side but strengthens the reach side. Put differently, the early-diffusion signal for reach appears stable and in this case even stronger on FibVID, whereas the signal for veracity remains modest in both datasets and is weaker on FibVID. The permutation tests show the same contrast. In Twitter15/16 at $k=60$, observed veracity AUC is about 0.640 against a null mean of 0.499, while observed reach $R^2$ is about 0.254 against a null mean of $-0.302$ (both empirical $p=0/200$). On FibVID, reach still clearly separates from the null, but veracity does not do so as strongly.
 
-This comparison matters for interpretation. The Twitter benchmark shows that the original pipeline was capable of extracting some early veracity signal in a clean native tree setting. The FibVID results, however, make clear that this signal is limited and does not generalize as strongly as the reach result. That is why the final interpretation of veracity is more cautious: it is better read as a weak screening signal than as a strong classifier.
+This comparison matters for interpretation. The Twitter benchmark shows that the original pipeline was capable of extracting some early veracity signal in a clean native tree setting. The FibVID results, however, make clear that this signal is limited and does not generalize as strongly as the reach result. This directly sharpens the paper's response to the literature. Findings such as \citet{vosoughi_spread_2018} are clearly relevant, but the present comparison suggests that full-cascade diffusion differences by veracity do not straightforwardly imply a strong early-warning veracity classifier. By contrast, the reach result is much more stable across the benchmark and the updated main dataset. That is why the final interpretation of veracity is more cautious: it is better read as a weak screening signal than as a strong classifier.
 
 \begin{table}[htbp]
   \centering
@@ -126,7 +128,7 @@ This comparison matters for interpretation. The Twitter benchmark shows that the
 \paragraph{Supplementary representation check for veracity.}
 As a supplementary check, I also estimate veracity models on a native graph representation of FibVID that does not force claims into a single-root cascade. In that specification, the best veracity result reaches AUC $\approx 0.616$ at $W=180$. I treat this as a representation check rather than as a second main pipeline. It suggests that veracity may benefit from retaining more of the original claim-level topology, but it does not alter the main result of the paper, which is based on the harmonized cascade-compatible representation.
 
-\subsection{Time-Window Robustness and Feature Diagnostics}
+\subsection{Time-Window Robustness}
 The time-window trajectory remains useful as a secondary diagnostic (Figure~\ref{fig:time_learning_curve}), especially for showing whether the main conclusions depend on the choice of window definition. On FibVID, the time-window results preserve the same qualitative ordering as the size-based analysis: veracity remains modest, while reach is still more predictable than veracity. The best time-window veracity result is around AUC $=0.570$ at $T=10$ under the interaction-full bundle, while the best full-bundle veracity result is around AUC $=0.545$ at $T=90$. For reach, the best full-bundle time-window result reaches about $R^2=0.396$ at $T=180$. This is far below the best size-based result on FibVID ($R^2 \approx 0.886$ at $k=180$), which supports keeping size-based windows as the main specification.
 
 The same design logic also remains reasonable on the Twitter15/16 side. In the earlier benchmark analysis, time-window results were useful as a supplementary check on whether the main pattern depended on fixed-message windows alone, but they did not replace the size-based design as the primary specification. Taken together, the two datasets point in the same direction: time windows remain informative as a robustness check, but $k$-windows remain better suited to the main analysis because they hold observed information quantity fixed and recover much stronger reach signal.
@@ -156,4 +158,4 @@ The residualization diagnostics in Table~\ref{tab:residualization_diag} show tha
 \FloatBarrier
 
 \paragraph{Summary.}
-Across tasks, the revised pipeline supports three conclusions: (1) size-based windows remain the strongest primary design; (2) early diffusion is much more informative for reach than for veracity on FibVID; and (3) Twitter15/16 remain useful as a benchmark, but the main substantive result is now anchored in FibVID rather than in the older rumor-tree dataset.
+Across tasks, the revised pipeline supports three conclusions. First, the answer to the reach question is clearly positive: early diffusion is strongly informative for eventual cascade size, especially under the harmonized size-based design. Second, the answer to the veracity question is more limited: early diffusion carries some signal, but not enough to justify a strong classification reading, and the most defensible interpretation is weak early screening. Third, Twitter15/16 remain useful as a benchmark for interpreting these findings, but the main substantive result is now anchored in FibVID rather than in the older rumor-tree dataset.
