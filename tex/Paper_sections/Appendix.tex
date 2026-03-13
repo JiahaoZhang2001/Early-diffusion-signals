@@ -8,6 +8,8 @@ This appendix preserves the fuller Twitter15/16 benchmark results that motivated
 
 Figure~\ref{fig:app_twitter_veracity} and Figure~\ref{fig:app_twitter_reach} report the original Twitter15/16 size-based primary curves. These figures correspond to the benchmark values summarized in the main text: veracity peaking around AUC $=0.657$ at $k=20$ and reach peaking around $R^2=0.719$ at $k=180$ under the interaction-full specification.
 
+Read together, these two figures show why the Twitter benchmark mattered in the earlier version of the thesis. Even in the cleaner native rumor-tree setting, veracity was never the stronger task. The benchmark already suggested that early diffusion was more informative for eventual reach than for veracity, although the veracity side looked somewhat better there than it does in FibVID. That is why the revised main text now uses Twitter15/16 mainly as a benchmark rather than as the sole empirical base.
+
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.82\linewidth]{Paper_sections/figures/TW_F1K_k_veracity_primary.pdf}
@@ -26,6 +28,8 @@ Figure~\ref{fig:app_twitter_veracity} and Figure~\ref{fig:app_twitter_reach} rep
 
 The benchmark pattern in model-family comparisons and permutation checks is also retained here. As in the main text, the benchmark suggests a moderate veracity signal and a stronger reach signal, with tree-based regressors contributing more clearly on the reach side.
 
+These benchmark figures are useful because they show that the revised thesis interpretation is not simply an artifact of switching to FibVID. The model-family figure already points to a task split in the benchmark setting: richer non-linear models matter more for reach than for veracity. The permutation figure also makes clear that benchmark veracity signal exists, but it still sits beside a stronger and more stable reach result. In that sense, the benchmark appendix helps show continuity between the earlier Twitter-centered analysis and the final FibVID-centered version of the thesis.
+
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.9\linewidth]{Paper_sections/figures/TW_F3_model_family_full_only.pdf}
@@ -43,6 +47,8 @@ The benchmark pattern in model-family comparisons and permutation checks is also
 \subsection{Supplementary Time-Window Benchmark Figure}
 
 For completeness, Figure~\ref{fig:app_twitter_time} retains the original benchmark time-window learning curve that was used as a supplementary check in the benchmark-centered version of the project.
+
+This figure is included mainly for completeness and comparability. In the earlier benchmark-centered analysis, time windows were already useful as a supplementary check rather than as the preferred primary design. Keeping the original benchmark time-window figure here makes it easier to see that the final thesis did not invent that logic only after shifting to FibVID. The revised paper changes the role of Twitter15/16 in the overall argument, but it does not erase the earlier benchmark evidence.
 
 \begin{figure}[htbp]
   \centering
