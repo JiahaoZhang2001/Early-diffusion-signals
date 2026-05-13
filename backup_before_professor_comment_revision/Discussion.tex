@@ -5,7 +5,7 @@ The clearest pattern in the revised results is still task asymmetry. On FibVID, 
 
 For reach, the pattern is much stronger. Under the harmonized FibVID specification, prediction performance is high even at moderate windows and remains strong in later ones. This suggests that early diffusion structure is much more informative for \emph{how far} a cascade will spread than for \emph{whether} it is false.
 
-The Twitter15/16 benchmark supports the same broad reading. In the original rumor-tree setting, veracity is somewhat stronger than it is on FibVID, while reach also remains strong. Relative to that benchmark, FibVID weakens the veracity side but strengthens the reach side. The comparison therefore does not overturn the earlier asymmetry; it makes it clearer.
+The Twitter15/16 benchmark supports the same broad reading. In the original rumor-tree setting, veracity reaches about AUC $=0.657$ at $k=20$, while reach reaches about $R^2=0.719$ at $k=180$. Relative to that benchmark, FibVID weakens the veracity side but strengthens the reach side. The comparison therefore does not overturn the earlier asymmetry; it makes it clearer.
 
 This point also matters for how the results speak back to the literature. Work such as \citet{vosoughi_spread_2018} shows that true and false information can diffuse differently when cascades are observed in full. The present results suggest a narrower conclusion under an early-warning constraint: visible diffusion differences in fully observed cascades do not translate automatically into strong early veracity classification. The reach result generalizes more clearly than the veracity result.
 
@@ -51,7 +51,7 @@ Both the released rumor trees in Twitter15/16 and the propagation records in Fib
 FibVID also differs from Twitter15/16 in ways beyond raw file format. It is a more claim-centered dataset, the main binary label setup is more imbalanced, and the harmonized representation is built from a different released structure than the native Twitter rumor trees. These differences do not invalidate comparison, but they do mean that cross-dataset contrasts should be read as evidence about portability under different data environments rather than as a pure apples-to-apples test of one fixed benchmark.
 
 \subsection{Implications for Early Warning Systems}
-The practical implication is a staged early-warning view. For veracity, diffusion-only performance remains limited in both datasets, so the most defensible use is early screening or triage rather than confident truth classification. Such signals may still help prioritize which cascades deserve further verification, but they should be interpreted conservatively.
+The practical implication is a staged early-warning logic. For veracity, diffusion-only performance remains limited in both datasets, so the most defensible use is early screening or triage rather than confident truth classification. Such signals may still help prioritize which cascades deserve further verification, but they should be interpreted conservatively.
 
 For reach, the case is much stronger. As more early interactions accumulate, structural and dynamic features become highly informative about eventual spread. This makes diffusion-based models more naturally suited to prioritizing likely high-impact cascades than to deciding whether a claim is true or false.
 

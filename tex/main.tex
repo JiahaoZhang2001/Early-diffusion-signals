@@ -1,93 +1,128 @@
-\documentclass{article}
-\usepackage[margin=1in]{geometry}
+\documentclass[11pt, titlepage]{article}
+\usepackage{lmodern}
+\usepackage[margin=1.25in, headheight=14pt]{geometry}
 \usepackage{setspace}
-% \doublespacing
 \onehalfspacing
 \usepackage{graphicx} % Required for inserting images
+\graphicspath{{images/}{figs/}{assets/}{Paper_sections/figures/}}
 \usepackage[backend=biber,style=apa,natbib=true]{biblatex} % Feel free to change the style to another one you prefer
 \addbibresource{references.bib}  
 \usepackage{amsmath, amssymb, amsthm, amsfonts}
 \usepackage{booktabs}
-\usepackage{mlmodern}
 \usepackage[utf8]{inputenc}
-\usepackage{xcolor}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{tikz}
 \usetikzlibrary{shapes, arrows.meta, positioning, calc, backgrounds, fit}
 
 \usepackage{float}
 \usepackage{placeins}
+\usepackage{nameref}
+\usepackage{fancyhdr}
 
 \usepackage{colorblind}
 \usepackage{hyperref} %% preferrably the last package called
-\hypersetup{colorlinks=true, urlcolor=blue}
 
 
+\newcommand{\thesistitle}{Early Diffusion Signals for Predicting Reach and Veracity in Social Media Rumor Cascades}
+\newcommand{\thesisauthor}{Jiahao Zhang}
+\newcommand{\graddate}{April 2026}
+\newcommand{\facultyadvisor}{Jean Clipperton}
+\newcommand{\preceptor}{Zhao Wang}
+\newcommand{\keywords}{misinformation; early warning; diffusion; rumor cascades; social media}
 
-\title{Early Diffusion Signals for Predicting Reach and Veracity in Social Media Rumor Cascades}
-\author{Jiahao Zhang}
-\date{\today}
+\hypersetup{
+  colorlinks=true,
+  allcolors=RoyalBlue,
+  citecolor=.,
+  pdfauthor={\thesisauthor \ Copyright \textcopyright \number\year},
+  pdftitle={\thesistitle},
+  pdfsubject={MACSS MA Thesis},
+  pdfkeywords={\keywords},
+  pdfborder={0 0 0}
+}
+
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[R]{\thesisauthor}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}
+
 
 \begin{document}
 
-\section*{Cover Letter}
-Before discussing the specific changes, I'd like to summarize the major changes in this final paper compared to the previous submission. First, I incorporated new data analysis that was previously incomplete, leading to significant changes in the use and description of the dataset, including the data table and my overall approach. Since the analysis of the new data differs somewhat from the old one, some necessary methods will be adopted to integrate it into the existing pipeline. For example, the new data will be harmonized to a structure similar to Twitter for further analysis and comparison. However, because the results differ from Twitter, the Twitter dataset, originally intended as a robustness check dataset, will now be used as a parallel comparison dataset. Second, regarding the revised steps, I didn't immediately adopt peer feedback because I wanted to complete the full data analysis and integrate it into my original text before considering any suggestions. As far as I know, some peer reviews have focused on issues like stating something but not actually implementing it. Third, I adopted some peer suggestions that I found acceptable, as some seemed too radical. I hope to discuss these with professor before making final changes. Fourth, I have basically addressed the feedback the professor gave me in weeks 7 and 8 in the final paper draft submission. This time, I mainly corrected the unclear diffusion chart mentioned earlier, and made the explanations of some graphs clearer and easier to understand. Afterwards, I will explain the suggestions my peers gave me and how I made the changes, in paragraphs following the format of abstract, introduction,...etc.
+\begin{titlepage}
+    \begin{center}
+        \vspace*{-0.45in}
+        \includegraphics[height=1.5in]{images/Shield.png}\\
+        \vspace{0.1in}
+        \Large{\uppercase{The University of Chicago}}\\
+        \vspace{0.8in}
+        \LARGE{\textsc{\thesistitle\\}}
+        \vspace{0.8in}
+        \normalsize{By}\\
+        \Large{\thesisauthor\\
+        \vspace{0.5in}
+        \graddate\\}
+        \vspace{0.8in}
+        \Large{A paper submitted in partial fulfillment of the requirements for \\
+        the Master of Arts degree in the Master of Arts in\\
+        Computational Social Science}
+        \vspace*{\fill}
+    \end{center}
+    \Large{Faculty Advisor: \facultyadvisor\\
+    Preceptor: \preceptor\\}
+    \vspace*{-0.45in}
+\end{titlepage}
 
-\paragraph{Title and Abstract}
-Firstly, regarding the title and abstract, what I understand the main issues are: first, the title isn't interested and eye-catching enough; second, the abstract is too short and needs expansion; and third, the current abstract more lile a proposal more than a thesis abstract because it lacks empirical results. I think their feedback is very insightful, as my original abstract remained largely unchanged throughout the quarter, retaining the initial version as begining, because I decided to refine it after completing the full analysis so I wait until now to do some changes. Regarding my revisions, I didn't adopt the suggestion to change the title. As I mentioned before, I didn't want to consider this crucial choice myself. While the title he suggested is quite eye-catching, I believe it might compromise some of the paper's academic integrity. My thesis assignment doesn't need to be overly attention because i am not going to publish it. Regarding the abstract section, after completing the full analysis and rewriting the paper, I expanded its length and incorporated the result, now it should be more like a thesis paper abstract.
+\section*{Abstract}
+Misinformation response faces a timing constraint: harmful cascades can scale before reliable verification is available. This thesis asks whether early diffusion traces contain useful predictive signal for two related tasks: eventual reach and veracity. The main analysis uses FibVID, while Twitter15/16 are used as a comparative benchmark. I study size-based early windows ($k \in \{10,20,30,45,60,90,120,180\}$) as the primary specification, since they hold observed message count fixed, and I report time-window analyses as robustness checks. Features combine residualized structural shape descriptors, Hawkes-inspired dynamic parameters, and structure--tempo interaction terms. Residualization is used to separate structural shape from early volume; after adjustment, the median absolute correlation between structural features and log early volume falls from about 0.248 to essentially zero in time windows.
 
-\paragraph{Introduction and literature review}
-Overall, I think the peer reviews for these two sections were quite positive. However, the main issues are: first, the absence of a formal hypothesis; second, although this part is well-written, it lacks of call back from later sections, especially to the literature review; and third, the literature review reveals the punchline too early might lose later strength of step by step luterature review. I fully agree that these issues exist. Consequently, I've added a formal hypothesis in the introduction and, where possible, referenced earlier literature in the discussion and results sections to make the paper feel more cohesive. Additionally, the ``punchline'' in the literature review was a point I hadn't considered. I've now made a logical adjustment: instead of concluding at the beginning, I first define the early-warning problem and the three types of literature to be reviewed in this section, leave the actual gap and argument for later part to discuss and improve.
+The main empirical result is a clear task asymmetry. On FibVID under the harmonized cascade-compatible specification, reach is strongly predictable from early diffusion: OLS reaches about $R^2=0.886$ at $k=180$, and the interaction-full specification peaks around $R^2=0.861$ at $k=120$. Veracity is much weaker. In the same FibVID analysis, the best baseline logit result reaches AUC $\approx 0.591$ at $k=180$, while richer feature bundles do not produce consistent gains over that baseline. The Twitter15/16 benchmark shows the same broad ordering, but the main result remains the FibVID pattern. Time-window results do not overturn these conclusions, but they are generally weaker than the size-based specification, especially for reach.
 
-\paragraph{Methods and Data}
-The issues raised in this section were exactly what I anticipated before reviewing the peer feedback, as I was aware my primary shortcomings. To summarize, the main points raised by the peers were: First, the methods section was too long, and more like an analysis plan; second, while the data part was solid, some datasets were merely mentioned without validation---meaning I made numerous promises but only partially delivered results; third, certain methods were introduced without detailing their specific application. Regarding improvements: I've already restructure some of the data and methods sections. However, about that length problem, I believe the methods section itself constitutes part of the contribution and requires clear explanation to facilitate understanding of my workflow. Regarding the pre-analysis plan, as I mentioned earlier, many elements were incomplete previously. Now that they've been added, this section will function as a comprehensive section rather than a plan. Beyond that, everything I mentioned earlier to be done has essentially been aligned in the current results section. Finally, regarding some methods I mentioned without specifying their usage, I've adjusted the language in this part. For example, instead of merely mentioning the Hawkes model, I've added clarification: I didn't use this model by itself, I incorporated the Hawkes-style summaries fitted from early arrival times as part of a dynamic feature bundle into the downstream prediction model. Regarding my GitHub repository, I've also updated it to the latest version. This ensures that anyone wishing to replicate my process in the future can clearly follow the steps provided.
+The main implication is therefore not that early diffusion can classify truth reliably. Rather, early diffusion is much more informative for \emph{how far} a cascade will spread than for \emph{whether} it is false. In practical terms, the results support a staged view of diffusion-based early warning: diffusion features are most defensible as a weak misinformation-risk screening signal and a much stronger tool for prioritizing likely high-impact cascades.
 
-\paragraph{Results}
-This section corresponds to the data\&method section. Many of the issues mentioned earlier pertain to this part, but since I've already outlined some potential fixes, I'll only provide a brief explanation here. First, in my understanding, the main issues are: 1. Results contain content but are not enough, many aspects remain underdeveloped. 2. Methods are described too much when results are insufficient and incomplete. 3. Cross-dataset validation is absent; some analyses mentioned as planned are not included. 4. Time window analysis is not presented as a primary result. 5. The research question remains unanswered because current wording sounds more descriptive. Regarding the changes to these issues, they have now been resolved. I have completed all the analysis I previously promised and incorporated the results. The methods and datasets that were previously planned but removed from the overall framework due to the change in approach have also been deleted. There have been some adjustments to the positioning of the time window and k window. In the current framework, the k window serves as the primary window setting, while the time window only appears later as a robustness check window. Furthermore, I have added a part in the results that directly addresses the research questions, emphasizing the final findings.
+\bigskip
+\noindent\textbf{Keywords:} \keywords
 
-\paragraph{Discussion and Conclusion}
-This section also contains several recurring issues. First, there are still unfinished plans, which naturally disqualifies it as a complete final paper. Second, there is insufficient review of the literature. Third, I currently lack a standalone conclusion. Fourth, I have not completed the work required for a comprehensive conclusion, including synthesizing the paper's contributions, restating key findings in relation to the research questions, and providing clear directions for future work. Regarding these issues, I must first personally acknowledge them once again, as they represent serious problems I failed to notice. Regarding the changes I've made, the previous plan has now been fully implemented with sufficient explanations, and the literature review has been appropriately referenced in subsequent sections. I've also made a major structural adjustment by splitting the original discussion and conclusion into two separate main sections. My initial structure are  provided by my advisor , but I now believe separating them enhances clarity. This change also allows for expanding and supplementing content to meet the required word count. In the conclusion, I have now incorporated some necessary statements and reflected on potential future directions. If I were to further expand this thesis paper, it would likely involve adding more dataset comparisons to test comparability and transferability; enhancing predictions regarding veracity, as the current dataset selection is limited or structurally inconsistent; and exploring whether datasets with identical structures might emerge in the future or attempting to create such datasets myself.
+{\color{Gray}\noindent\hrulefill}
 
-\paragraph{Other}
-Regarding other sections, peers raised several issues: First, the description of the GitHub repository section was insufficiently clear and too brief. Second, verb tenses were inconsistent at times, or the future tense was used (a complete thesis should avoid the future tense except in the ``Future Work'' section). Third, I alternated between ``this thesis,'' ``this project,'' etc., which affected the document's consistency. Fourth, the distinction between `promises' and ``achievements.'' In response, I've revised all these sections. For the latest code statement, I first relocated it to a correct, easily accessible position, expanded the content, and updated the repository to enhance clarity for replicators. Additionally, regarding syntax and vocabulary usage, I've thoroughly reviewed and edited the text to the best of my ability, ensuring consistent tense usage and employing ``this thesis'' throughout---except where it sounds awkward within the sentence structure. Regarding the overall issue, as previously addressed, I have completed the promise analysis and refined the necessary additions. In summary, I remain open to further modifications if any useful comments. I am deeply grateful for the peer and professor reviews, which have significantly enhanced the completeness of my paper!
-
-\clearpage
-
-\maketitle
-\textbf{Overleaf (paper):} \url{https://www.overleaf.com/2132397694sjkqndvywpyd}
-\begin{abstract}
-Misinformation response faces a timing constraint: harmful cascades can scale before reliable verification is available. This thesis asks whether early diffusion traces contain useful predictive signal for two related tasks: eventual reach and veracity. The main analysis uses FibVID, with Twitter15/16 retained as a comparative benchmark. I study size-based early windows ($k \in \{10,20,30,45,60,90,120,180\}$) as the primary specification, since they hold observed message count fixed, and I report time-window analyses as robustness checks. Features combine residualized structural shape descriptors, Hawkes-inspired dynamic parameters, and structure--tempo interaction terms. Residualization is used to separate structural shape from early volume; after adjustment, the median absolute correlation between structural features and log early volume falls from about 0.248 to essentially zero in time windows.
-
-The main empirical result is a clear task asymmetry. On FibVID under the harmonized cascade-compatible specification, reach is strongly predictable from early diffusion: OLS reaches about $R^2=0.886$ at $k=180$, and the interaction-full specification peaks around $R^2=0.861$ at $k=120$. Veracity is much weaker. In the same FibVID analysis, the best baseline logit result reaches AUC $\approx 0.591$ at $k=180$, while richer feature bundles do not produce consistent gains over that baseline. The Twitter15/16 benchmark shows the same broad ordering, though with somewhat stronger veracity performance: the best interaction-full veracity result reaches AUC $\approx 0.657$ at $k=20$, while interaction-full reach reaches $R^2 \approx 0.719$ at $k=180$. Time-window results do not overturn these conclusions, but they are generally weaker than the size-based specification, especially for reach.
-
-The main implication is therefore not that early diffusion can classify truth reliably. Rather, early diffusion is much more informative for \emph{how far} a cascade will spread than for \emph{whether} it is false. In practical terms, the results support a staged early-warning logic: diffusion features are most defensible as a weak misinformation-risk screening signal and a much stronger tool for prioritizing likely high-impact cascades.
-\end{abstract} \hspace{10pt}
+\newpage
 
 \section{Introduction}
+\label{intro}
 \input{Paper_sections/Introduction}
 
 \section{Literature Review}
+\label{litreview}
 \input{Paper_sections/LitReview}
 
 \section{Data and Methods}
-
+\label{datamethods}
 
 \input{Paper_sections/Data&Methods}
 
 \section{Results}
+\label{results}
 \input{Paper_sections/Results}
 
 \section{Discussion}
+\label{discussion}
 \input{Paper_sections/Discussion}
 
 \section{Conclusion}
+\label{conclusion}
 \input{Paper_sections/Conclusion}
 
-\input{Paper_sections/Appendix}
-
-\section*{Data and Code Availability}
+\vfill
+{\normalsize\section*{Data and Code Availability Statement}}
 \input{Paper_sections/DataCodeAvailability}
 
 
+\newpage
+\section*{References}
+\label{references}
+\printbibliography[heading=none]
 
-\printbibliography
+\newpage
+\input{Paper_sections/Appendix}
 \end{document}

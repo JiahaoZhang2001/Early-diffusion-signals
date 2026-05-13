@@ -21,6 +21,14 @@ tex/*.log
 tex/*.out
 tex/*.pdf
 tex/*.run.xml
+tex/*.bbl
+tex/*.blg
+main.aux
+main.bcf-SAVE-ERROR
+main.fdb_latexmk
+main.fls
+main.log
+main.out
 tex/presentation_bundle.zip
 tex.zip
 results/
